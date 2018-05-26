@@ -21,6 +21,10 @@ tenantUrl="https://m365x526922.sharepoint.com"
 prefix=""
 skipSolutionDeployment=false
 skipSiteCreation=false
+stockAPIKey=""
+company="Contoso"
+weatherCity="Seattle"
+stockSymbol="MSFT"
 
 # create sites
 
@@ -155,7 +159,29 @@ if [ ! $skipSolutionDeployment ]; then
   # disable quick launch for the portal
   # deploy.ps1:100
 
-  theme=$(o365 spo propertybag get --webUrl $portalUrl --key ThemePrimary --output json)
+  currentTheme=$(o365 spo propertybag get --webUrl $portalUrl --key ThemePrimary)
+  theme=$(cat theme.json | jq '.themePrimary')
+  if [ ! "$currentTheme" = "$theme" ]; then
+    echo "Setting theme..."
+    o365 spo theme set --name "Contoso Portal" --filePath ./theme.json
+    success "DONE"
+    echo "Applying theme..."
+    o365 spo theme apply --name "Contoso Portal" --webUrl $portalUrl
+    success "DONE"
+  else
+    warning "Theme already set"
+  fi
+
+  if [ -z "$stockAPIKey" ]; then
+    echo "Setting stockAPIKey $stockAPIKey..."
+    # TODO don't require to specify the app catalog URL
+    o365 spo storageentity set --key "PnP-Portal-AlphaVantage-API-Key" --value "$stockAPIKey" --description "API Key for Alpha Advantage REST Stock service"
+    success "DONE"
+  else
+    warning "stockAPIKey not specified. Skipping"
+  fi
+
+  echo "Configuring portal..."
 
   id=$(echo $app | jq -r '.ID')
   installedVersion=$(echo $app | jq -r '.InstalledVersion')

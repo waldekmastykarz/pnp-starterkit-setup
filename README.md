@@ -1,5 +1,7 @@
 # Setup bash script
 
+Setup bash script for the [PnP Starter Kit](https://github.com/SharePoint/sp-starter-kit)
+
 ## Prerequisites
 
 - Install
