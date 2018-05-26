@@ -24,24 +24,24 @@ skipSiteCreation=false
 
 # create sites
 
-portalSiteUrl=$tenantUrl/sites/$(echo $prefix)portal
-echo $portalSiteUrl
+portalUrl=$tenantUrl/sites/$(echo $prefix)portal
+echo $portalUrl
 exit 1
 if [ ! $skipSiteCreation ]; then
-  echo "Provisioning portal site at $portalSiteUrl..."
-  site=$(o365 spo site get --url $portalSiteUrl --output json)
+  echo "Provisioning portal site at $portalUrl..."
+  site=$(o365 spo site get --url $portalUrl --output json)
   if $(isError "$site"); then
     echo "Creating site..."
-    o365 spo site add --type CommunicationSite --url $portalSiteUrl --title 'PnP SP Starter Kit' --description 'PnP SP Starket Kit Hub'
+    o365 spo site add --type CommunicationSite --url $portalUrl --title 'PnP SP Starter Kit' --description 'PnP SP Starket Kit Hub'
     success "DONE"
   else
     warning "Site already exists"
   fi
 
-  hubsiteId=$(o365 spo hubsite list --output json | jq -r '.[] | select(.SiteUrl == "'"$portalSiteUrl"'") | .ID')
+  hubsiteId=$(o365 spo hubsite list --output json | jq -r '.[] | select(.SiteUrl == "'"$portalUrl"'") | .ID')
   if [ -z "$hubsiteId" ]; then
     echo "Hubsite not found. Registering..."
-    out=$(o365 spo hubsite register --url $portalSiteUrl --output json)
+    out=$(o365 spo hubsite register --url $portalUrl --output json)
     if $(isError "$out"); then
       errorMessage "$out"
       exit 1
@@ -151,10 +151,16 @@ if [ ! $skipSolutionDeployment ]; then
     success "DONE"
   fi
 
+  # TODO
+  # disable quick launch for the portal
+  # deploy.ps1:100
+
+  theme=$(o365 spo propertybag get --webUrl $portalUrl --key ThemePrimary --output json)
+
   id=$(echo $app | jq -r '.ID')
   installedVersion=$(echo $app | jq -r '.InstalledVersion')
   if [ -z $installedVersion ]; then
-    o365 spo app upgrade --id $id --siteUrl $portalSiteUrl
+    o365 spo app upgrade --id $id --siteUrl $portalUrl
   fi
 fi
 
