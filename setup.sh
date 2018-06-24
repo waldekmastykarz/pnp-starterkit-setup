@@ -14,10 +14,7 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # helper functions
 . ./functions.sh
 
-# script arguments
-arg1="${1:-}"
-
-tenantUrl="https://m365x526922.sharepoint.com"
+tenantUrl=
 prefix=""
 skipSolutionDeployment=false
 skipSiteCreation=false
@@ -25,6 +22,51 @@ stockAPIKey=""
 company="Contoso"
 weatherCity="Seattle"
 stockSymbol="MSFT"
+
+# script arguments
+while [ $# -gt 0 ]; do
+  case $1 in
+    -t|--tenantUrl)
+      shift
+      tenantUrl=$1
+      ;;
+    -p|--prefix)
+      shift
+      prefix=$1
+      ;;
+    --skipSolutionDeployment)
+      skipSolutionDeployment=true
+      ;;
+    --skipSiteCreation)
+      skipSiteCreation=true
+      ;;
+    --stockAPIKey)
+      shift
+      stockAPIKey=$1
+      ;;
+    -c|--company)
+      shift
+      company=$1
+      ;;
+    -w|--weatherCity)
+      shift
+      weatherCity=$1
+      ;;
+    --stockSymbol)
+      shift
+      stockSymbol=$1
+      ;;
+    *)
+      echo "Invalid argument $1"
+      exit 1
+  esac
+  shift
+done
+
+if [ -z "$tenantUrl" ]; then
+  echo "Please specify tenant URL"
+  exit 1
+fi
 
 # create sites
 

@@ -1,4 +1,4 @@
-isError () {
+isError() {
   res=$(echo $1 | jq -r '.message')
   if [[ -z "$res" || "$res" = "null" ]]; then return 1; else return 0; fi
 }
