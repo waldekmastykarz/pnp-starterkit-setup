@@ -68,6 +68,8 @@ if [ -z "$tenantUrl" ]; then
   exit 1
 fi
 
+portalUrl=$tenantUrl/sites/$(echo $prefix)portal
+
 if [ ! $skipSiteCreation = true ]; then
   . ./_create-hierarchy.sh
 fi
