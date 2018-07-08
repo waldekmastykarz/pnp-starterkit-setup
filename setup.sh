@@ -69,6 +69,11 @@ if [ -z "$tenantUrl" ]; then
 fi
 
 portalUrl=$tenantUrl/sites/$(echo $prefix)portal
+appCatalogUrl=$(o365 spo tenant appcatalogurl get)
+if [ -z "$appCatalogUrl" ]; then
+  error "Couldn't retrieve tenant app catalog"
+  exit 1
+fi
 
 if [ ! $skipSiteCreation = true ]; then
   . ./_create-hierarchy.sh
