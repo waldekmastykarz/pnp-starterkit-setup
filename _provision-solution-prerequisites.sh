@@ -54,9 +54,9 @@ else
   success "DONE"
 fi
 
-# TODO
-# disable quick launch for the portal
-# deploy.ps1:100
+echo "Disabling quick launch for the portal..."
+o365 spo web set --webUrl $portalUrl --quickLaunchEnabled false
+success "DONE"
 
 currentTheme=$(o365 spo propertybag get --webUrl $portalUrl --key ThemePrimary)
 theme=$(cat theme.json | jq '.themePrimary')
@@ -73,8 +73,7 @@ fi
 
 if [ ! -z "$stockAPIKey" ]; then
   echo "Setting stockAPIKey $stockAPIKey..."
-  # TODO don't require to specify the app catalog URL
-  o365 spo storageentity set --key "PnP-Portal-AlphaVantage-API-Key" --value "$stockAPIKey" --description "API Key for Alpha Advantage REST Stock service"
+  o365 spo storageentity set --appCatalogUrl $appCatalogUrl --key "PnP-Portal-AlphaVantage-API-Key" --value "$stockAPIKey" --description "API Key for Alpha Advantage REST Stock service"
   success "DONE"
 else
   warning "stockAPIKey not specified. Skipping"
