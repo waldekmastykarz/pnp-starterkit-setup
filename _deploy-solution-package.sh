@@ -1,8 +1,8 @@
 if [ ! $skipSolutionDeployment = true ]; then
   echo "Deploying solution..."
 
-  app=$(o365 spo app get --name "sharepoint-portal-showcase.sppkg" --output json)
-  if [ ! -z "$app" ]; then
+  app=$(o365 spo app get --name "sharepoint-portal-showcase.sppkg" --output json || true)
+  if ! isError "$app"; then
     warning "Solution package already exists. Removing..."
     appId=$(echo $app | jq -r '.ID')
     o365 spo app remove --id $appId --confirm

@@ -89,8 +89,52 @@ for fieldInfo in "${fields[@]}"; do
 done
 success "DONE"
 
-# TODO: provision content types
-# TODO: add fields to content types
+contentTypes=(
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Name:"PnP Alert"',
+  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Name:"PnPTile"'
+)
+
+echo "Provisioning content types..."
+for contentTypeInfo in "${contentTypes[@]}"; do
+  contentTypeId=$(getPropertyValue "$contentTypeInfo" "ID")
+  echo "  Provisioning content type $contentTypeId..."
+  contentType=$(o365 spo contenttype get --webUrl $portalUrl --id $contentTypeId --output json || true)
+  if $(isError "$contentType"); then
+    echo "    Creating content type..."
+    contentTypeName=$(getPropertyValue "$contentTypeInfo" "Name")
+    o365 spo contenttype add --webUrl $portalUrl --id $contentTypeId --name "$contentTypeName" --group 'PnP Content Types'
+    success "    DONE"
+  else
+    warning "    Content type already exists"
+  fi
+done
+success "DONE"
+
+# The Name argument is purely informative so that you can easily see which field it is
+contentTypesFields=(
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"ebe7e498-44ff-43da-a7e5-99b444f656a5" Name:"PnPAlertType" required:"true"',
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"f056406b-b46b-4a94-8503-361de4ca2752" Name:"PnPAlertMessage" required:"true"',
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"5ee2dd25-d941-455a-9bdb-7f2c54aed11b" Name:"PnPAlertStartDateTime" required:"true"',
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"b0d8c6ed-2487-43e7-a716-bf274f0d5e09" Name:"PnPAlertEndDateTime" required:"true"',
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"6085e32a-339b-4da7-ab6d-c1e013e5ab27" Name:"PnPAlertMoreInformation"',
+
+  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"a67b73bf-acb0-4517-93e6-91585316ec49" Name:"PnPDescription"',
+  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"a374d13d-040b-4104-9973-edfdca1e3fc1" Name:"PnPIconName"',
+  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"9913d58a-9a75-41fc-86aa-f6de1d9328ba" Name:"PnPUrl"',
+  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"4ad64f28-1772-492d-bde4-998a08f8a7ae" Name:"PnPUrlTarget"'
+)
+
+echo "Adding fields to content types..."
+for ctField in "${contentTypesFields[@]}"; do
+  contentTypeId=$(getPropertyValue "$ctField" "ID")
+  fieldId=$(getPropertyValue "$ctField" "Field")
+  required=$(if [[ $ctField = *"required:"* ]]; then echo "--required true"; else echo ""; fi)
+  echo "  Adding field $fieldId to content type $contentTypeId..."
+  o365 spo contenttype field set --webUrl $portalUrl --contentTypeId $contentTypeId --fieldId $fieldId $required
+  success "  DONE"
+done
+success "DONE"
+
 # TODO: provision pages
 
 # Navigation requires pages to be provisioned first

@@ -19,3 +19,9 @@ errorMessage() {
   msg=$(echo "$1" | jq -r ".message")
   error "$msg"
 }
+
+# $1 string with key-value pairs
+# $2 name of the property for which to retrieve value
+getPropertyValue() {
+  echo "$1" | grep -o "$2:\"[^\"]\\+" | cut -d"\"" -f2
+}
