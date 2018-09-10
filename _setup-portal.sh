@@ -135,7 +135,24 @@ for ctField in "${contentTypesFields[@]}"; do
 done
 success "DONE"
 
-# TODO: provision pages
+# Provision pages
+
+## Home page
+
+pageName="home.aspx"
+echo "Provisioning page $pageName..."
+page=$(o365 spo page get --webUrl $portalUrl --name $pageName --output json || true)
+if ! isError "$page"; then
+  warning "  Page $pageName already exists. Removing..."
+  o365 spo page remove --webUrl $portalUrl --name $pageName --confirm
+  success "  DONE"
+fi
+echo "  Creating page..."
+o365 spo page add --webUrl $portalUrl --name $pageName
+success "  DONE"
+echo "  Adding sections..."
+echo "    #1"
+# TODO: o365 spo page section add --webUrl $portalUrl --name $pageName --sectionTemplate TwoColumnLeft --order 1
 
 # Navigation requires pages to be provisioned first
 exit 1
