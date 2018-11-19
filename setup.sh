@@ -75,12 +75,15 @@ if [ -z "$appCatalogUrl" ]; then
   exit 1
 fi
 
-if [ ! $skipSiteCreation = true ]; then
-  . ./_create-hierarchy.sh
-fi
-. ./_provision-solution-prerequisites.sh
-if [ ! $skipSolutionDeployment = true ]; then
-  . ./_deploy-solution-package.sh
-fi
-. ./_setup-portal.sh
-. ./_setup-department-sites.sh
+# . ./_setup-tenant.sh
+. ./_setup-taxonomy.sh
+
+# if [ ! $skipSiteCreation = true ]; then
+#   . ./_create-hierarchy.sh
+# fi
+# . ./_provision-solution-prerequisites.sh
+# if [ ! $skipSolutionDeployment = true ]; then
+#   . ./_deploy-solution-package.sh
+# fi
+# . ./_setup-portal.sh
+# . ./_setup-department-sites.sh

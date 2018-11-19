@@ -1,5 +1,7 @@
 isError() {
-  res=$(echo $1 | jq -r '.message')
+  # some error messages can have line breaks which break jq, so they need to be
+  # removed before passing the string to jq
+  res=$(echo "${1//\\r\\n/ }" | jq -r '.message')
   if [[ -z "$res" || "$res" = "null" ]]; then return 1; else return 0; fi
 }
 
@@ -16,7 +18,9 @@ error() {
 }
 
 errorMessage() {
-  msg=$(echo "$1" | jq -r ".message")
+  # some error messages can have line breaks which break jq, so they need to be
+  # removed before passing the string to jq
+  msg=$(echo "${1//\\r\\n/ }" | jq -r ".message")
   error "$msg"
 }
 

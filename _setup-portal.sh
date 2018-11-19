@@ -12,55 +12,8 @@ echo "Setting PnPTilesList tenant property..."
 o365 spo storageentity set --appCatalogUrl $appCatalogUrl --key PnPTilesList-$(echo $siteJson) --value $portalUrl/Lists/PnPTiles
 success "DONE"
 
-siteScriptsJson=$(o365 spo sitescript list --output json)
 
-echo "Setting team site site script..."
-teamSiteScriptName="$company Team Site"
-teamSiteScriptId=$(echo $siteScriptsJson | jq -r '.[] | select(.Title == "'"$teamSiteScriptName"'") | .Id')
-if [ ! -z "$teamSiteScriptId" ]; then
-  warning "Site script '$teamSiteScriptName' already exists. Removing..."
-  o365 spo sitescript remove --id $teamSiteScriptId --confirm
-  success "DONE"
-fi
-teamSiteScript=$(cat collabteamsite.json | jq -c '.')
-teamSiteScriptId=$(o365 spo sitescript add --title $teamSiteScriptName --content "'"$teamSiteScript"'" --output json | jq -r '.Id')
-success "DONE"
 
-echo "Setting communication site site script..."
-commSiteScriptName="$company Communication Site"
-commSiteScriptId=$(echo $siteScriptsJson | jq -r '.[] | select(.Title == "'"$commSiteScriptName"'") | .Id')
-if [ ! -z "$commSiteScriptId" ]; then
-  warning "Site script '$commSiteScriptName' already exists. Removing..."
-  o365 spo sitescript remove --id $commSiteScriptId --confirm
-  success "DONE"
-fi
-commSiteScript=$(cat collabcommunicationsite.json | jq -c '.')
-commSiteScriptId=$(o365 spo sitescript add --title "$commSiteScriptName" --content "'"$commSiteScript"'" --output json | jq -r '.Id')
-success "DONE"
-
-siteDesignsJson=$(o365 spo sitedesign list --output json)
-
-echo "Setting team site site design..."
-teamSiteDesignName="$company Team Site"
-teamSiteDesignId=$(echo $siteDesignsJson | jq -r '.[] | select(.Title == "'"$teamSiteDesignName"'") | .Id')
-if [ ! -z "$teamSiteDesignId" ]; then
-  warning "Site design '$teamSiteDesignName' already exists. Removing..."
-  o365 spo sitedesign remove --id $teamSiteDesignId --confirm
-  success "DONE"
-fi
-o365 spo sitedesign add --title "$teamSiteDesignName" --webTemplate TeamSite --siteScripts "$teamSiteScriptId"
-success "DONE"
-
-echo "Setting communication site site design..."
-commSiteDesignName="$company Communication Site"
-commSiteDesignId=$(echo $siteDesignsJson | jq -r '.[] | select(.Title == "'"$commSiteDesignName"'") | .Id')
-if [ ! -z "$commSiteDesignId" ]; then
-  warning "Site design '$commSiteDesignName' already exists. Removing..."
-  o365 spo sitedesign remove --id $commSiteDesignId --confirm
-  success "DONE"
-fi
-o365 spo sitedesign add --title "$commSiteDesignName" --webTemplate CommunicationSite --siteScripts "$commSiteScriptId"
-success "DONE"
 
 fields=(
   '`<Field Type="DateTime" DisplayName="Start date-time" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" Format="DateTime" Group="PnP Columns" FriendlyDisplayFormat="Disabled" ID="{5ee2dd25-d941-455a-9bdb-7f2c54aed11b}" SourceID="{4f118c69-66e0-497c-96ff-d7855ce0713d}" StaticName="PnPAlertStartDateTime" Name="PnPAlertStartDateTime"><Default>[today]</Default></Field>`'
@@ -148,11 +101,19 @@ if ! isError "$page"; then
   success "  DONE"
 fi
 echo "  Creating page..."
-o365 spo page add --webUrl $portalUrl --name $pageName
+# TODO: remove layout type once we can provision sections, otherwise we end up with an empty page without sections to which we can't add web parts
+o365 spo page add --webUrl $portalUrl --name $pageName --layoutType Home
 success "  DONE"
 echo "  Adding sections..."
 echo "    #1"
 # TODO: o365 spo page section add --webUrl $portalUrl --name $pageName --sectionTemplate TwoColumnLeft --order 1
+echo "      Adding web parts..."
+echo "        Hero"
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName --standardWebPart Hero --webPartPropertiesFile portal-home-01-1-1-hero.json
+success "        DONE"
+success "      DONE"
+success "    DONE"
+
 
 # Navigation requires pages to be provisioned first
 exit 1
