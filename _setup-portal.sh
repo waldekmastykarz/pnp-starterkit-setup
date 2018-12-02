@@ -177,7 +177,7 @@ for node in "${departmentsNodes[@]}"; do
 done
 
 sub '- Provisioning lists...\n'
-# events
+events
 sub '  - Events...'
 list=$(o365 spo list get --webUrl $portalUrl --title Events --output json || true)
 if $(isError "$list"); then
@@ -249,8 +249,61 @@ o365 spo list view set --webUrl $portalUrl --listTitle Alerts \
   --ListViewXml '`<Query><OrderBy><FieldRef Name="ID" /></OrderBy></Query><ViewFields><FieldRef Name="LinkTitle" /><FieldRef Name="PnPAlertType" /><FieldRef Name="PnPAlertMessage" /><FieldRef Name="PnPAlertStartDateTime" /><FieldRef Name="PnPAlertEndDateTime" /><FieldRef Name="PnPAlertMoreInformation" /></ViewFields><RowLimit Paged="TRUE">30</RowLimit><JSLink>clienttemplates.js</JSLink><XslLink Default="TRUE">main.xsl</XslLink><Toolbar Type="Standard"/>`'
 success 'DONE'
 # /alerts
+# Site Assets
+sub '  - Site Assets...'
+list=$(o365 spo list get --webUrl $portalUrl --title 'Site Assets' --output json || true)
+if $(isError "$list"); then
+  list=$(o365 spo list add --webUrl $portalUrl --title 'SiteAssets' \
+    --description 'Use this library to store files which are included on pages within this site, such as images on Wiki pages.' \
+    --baseTemplate DocumentLibrary \
+    --templateFeatureId 00bfea71-e717-4e80-aa17-d0c71b360101 \
+    --contentTypesEnabled --output json || true)
+  if $(isError "$list"); then
+    error 'ERROR'
+    errorMessage "$list"
+    exit 1
+  fi
+  listId=$(echo $list | jq -r '.Id')
+  o365 spo list set --webUrl $portalUrl --id $listId --title 'Site Assets'
+  success 'DONE'
+else
+  warning 'EXISTS'
+fi
+# /Site Assets
 
-setupPortalExtensions $portalUrl
+# setupPortalExtensions $portalUrl
 
-success 'DONE'
-echo
+# # files
+# sub '- Provisioning assets...\n'
+# files=(
+#   'Commercial16_smallmeeting_02.jpg',
+#   'MSSurface_Pro4_SMB_Seattle_0578.jpg',
+#   'WCO18_ITHelp_004.jpg',
+#   'WCO18_whiteboard_002.jpg',
+#   'Win17_15021_00_N9.jpg',
+#   'contoso_sitelogo.png',
+#   'hero.jpg',
+#   'logo_hr.png',
+#   'logo_marketing.png',
+#   'meeting-rooms.jpg',
+#   'page-faq.jpg',
+#   'page-feedback.jpg',
+#   'page-financial-results.jpg',
+#   'page-hr.jpg',
+#   'page-my-profile.jpg',
+#   'page-people-directory.jpg',
+#   'page-support.jpg',
+#   'page-training.jpg',
+#   'page-travel-instructions.jpg',
+#   'work-life-balance.png',
+#   'working-methods.jpg'
+# )
+# for file in "${files[@]}"; do
+#   sub "  - $file..."
+#   o365 spo file add --webUrl $portalUrl --folder ''
+#   success 'DONE'
+# done
+# # /files
+
+# success 'DONE'
+# echo
