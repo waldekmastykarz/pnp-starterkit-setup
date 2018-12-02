@@ -114,3 +114,22 @@ setupExtensions() {
     success 'DONE'
   fi
 }
+
+# $1 site URL
+# $2 list title
+# $3 item title
+# ... other args to pass as-is
+addOrUpdateListItem() {
+  # get the ID of the first item matching the title
+  sub "      - $3..."
+  itemId=$(o365 spo listitem list --webUrl $1 --title "$2" --filter "Title eq '$3'" --output json | jq '.[0] | .Id')
+  if [ $itemId = 'null' ]; then
+    sub 'CREATING...'
+    o365 spo listitem add --webUrl $1 --listTitle "$2" "${@:4}" >/dev/null
+    success 'DONE'
+  else
+    sub 'UPDATING...'
+    o365 spo listitem set --webUrl $1 --listTitle "$2" --id $itemId "${@:4}" >/dev/null
+    success 'DONE'
+  fi
+}

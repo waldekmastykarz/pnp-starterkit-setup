@@ -176,5 +176,74 @@ for node in "${departmentsNodes[@]}"; do
   success 'DONE'
 done
 
+sub '- Provisioning lists...\n'
+# events
+sub '  - Events...'
+list=$(o365 spo list get --webUrl $portalUrl --title Events --output json || true)
+if $(isError "$list"); then
+  o365 spo list add --webUrl $portalUrl --title Events --baseTemplate Events \
+    --templateFeatureId 00bfea71-ec85-4903-972d-ebe475780106 \
+    --contentTypesEnabled >/dev/null
+  success 'DONE'
+else
+  warning 'EXISTS'
+fi
+
+sub '    - List items...\n'
+addOrUpdateListItem $portalUrl Events 'SharePoint Conference North America' \
+  --Title 'SharePoint Conference North America' \
+  --fAllDayEvent true \
+  --EventDate '2018-05-21 00:00:00' \
+  --EndDate '2018-05-23 23:59:00'
+addOrUpdateListItem $portalUrl Events 'European Collaboration Summit' \
+  --Title 'European Collaboration Summit' \
+  --fAllDayEvent true \
+  --EventDate '2018-05-28 00:00:00' \
+  --EndDate '2018-05-30 23:59:00'
+addOrUpdateListItem $portalUrl Events 'Microsoft Ignite' \
+  --Title 'Microsoft Ignite' \
+  --fAllDayEvent true \
+  --EventDate '2018-09-24 00:00:00' \
+  --EndDate '2018-09-28 23:59:00'
+addOrUpdateListItem $portalUrl Events 'European SharePoint Conference' \
+  --Title 'European SharePoint Conference' \
+  --fAllDayEvent true \
+  --EventDate '2018-11-26 00:00:00' \
+  --EndDate '2018-11-29 23:59:00'
+addOrUpdateListItem $portalUrl Events 'SharePoint Conference' \
+  --Title 'SharePoint Conference' \
+  --fAllDayEvent true \
+  --EventDate '2019-05-21 00:00:00' \
+  --EndDate '2019-05-23 23:59:00'
+addOrUpdateListItem $portalUrl Events 'European Collaboration Summit' \
+  --Title 'SharePoint Conference' \
+  --fAllDayEvent true \
+  --EventDate '2019-05-27 00:00:00' \
+  --EndDate '2019-05-29 23:59:00'
+# /events
+# alerts
+sub '  - Alerts...'
+list=$(o365 spo list get --webUrl $portalUrl --title Alerts --output json || true)
+if $(isError "$list"); then
+  o365 spo list add --webUrl $portalUrl --title Alerts --baseTemplate GenericList \
+    --templateFeatureId 00bfea71-de22-43b2-a848-c05709900100 \
+    --contentTypesEnabled >/dev/null
+  success 'DONE'
+else
+  warning 'EXISTS'
+fi
+sub '    - Adding PnP Alert content type...'
+contentType=$(o365 spo list contenttype list --webUrl $portalUrl \
+  --listTitle Alerts --output json | \
+  jq -r '.[] | select(.StringId | startswith("0x01007926A45D687BA842B947286090B8F67D")) | .StringId')
+if [ -z "$contentType" ]; then
+  o365 spo list contenttype add --webUrl $portalUrl --listTitle Alerts \
+    --contentTypeId 0x01007926A45D687BA842B947286090B8F67D >/dev/null
+  success 'DONE'
+else
+  warning 'EXISTS'
+fi
+# /alerts
+
 success 'DONE'
 echo
