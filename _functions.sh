@@ -75,28 +75,13 @@ customActionExists() {
 }
 
 # $1 site URL
-setupExtensions() {
+setupCommonExtensions() {
   siteUrl=$1
-  sub '- Configuring extensions...\n'
-  sub "  - DiscussNow..."
-  if $(customActionExists DiscussNow $siteUrl); then
-    warning 'EXISTS'
-  else
-    o365 spo customaction add --url $siteUrl --title DiscussNow --name DiscussNow --location ClientSideExtension.ListViewCommandSet --registrationId 101 --registrationType List --clientSideComponentId 130b279d-a5d1-41b9-9fd1-4a274169b117
-    success 'DONE'
-  fi
   sub '  - AlertNotification...'
   if $(customActionExists AlertNotification $siteUrl); then
     warning 'EXISTS'
   else
     o365 spo customaction add --url $siteUrl --title AlertNotification --name AlertNotification --location ClientSideExtension.ApplicationCustomizer --clientSideComponentId aa8dd198-e2ee-45c5-b746-821d001bb0e1
-    success 'DONE'
-  fi
-  sub '  - CollabFooter...'
-  if $(customActionExists CollabFooter $siteUrl); then
-    warning 'EXISTS'
-  else
-    o365 spo customaction add --url $siteUrl --title CollabFooter --name CollabFooter --location ClientSideExtension.ApplicationCustomizer --clientSideComponentId c0ab3b94-8609-40cf-861e-2a1759170b43 --clientSideComponentProperties '`{"sourceTermSet":"PnP-CollabFooter-SharedLinks","personalItemsStorageProperty":"PnP-CollabFooter-MyLinks"}`'
     success 'DONE'
   fi
   sub '  - Redirect...'
@@ -111,6 +96,41 @@ setupExtensions() {
     warning 'EXISTS'
   else
     o365 spo customaction add --url $siteUrl --title SiteClassification --name SiteClassification --location ClientSideExtension.ApplicationCustomizer --clientSideComponentId 7f69d5cb-5aeb-4bc6-9f77-146aebfd9a8e --sequence 1
+    success 'DONE'
+  fi
+}
+
+# $1 site URL
+setupCollabExtensions() {
+  siteUrl=$1
+  sub '- Configuring extensions...\n'
+  setupCommonExtensions $siteUrl
+  sub '  - DiscussNow...'
+  if $(customActionExists DiscussNow $siteUrl); then
+    warning 'EXISTS'
+  else
+    o365 spo customaction add --url $siteUrl --title DiscussNow --name DiscussNow --location ClientSideExtension.ListViewCommandSet --registrationId 101 --registrationType List --clientSideComponentId 130b279d-a5d1-41b9-9fd1-4a274169b117
+    success 'DONE'
+  fi
+  sub '  - CollabFooter...'
+  if $(customActionExists CollabFooter $siteUrl); then
+    warning 'EXISTS'
+  else
+    o365 spo customaction add --url $siteUrl --title CollabFooter --name CollabFooter --location ClientSideExtension.ApplicationCustomizer --clientSideComponentId c0ab3b94-8609-40cf-861e-2a1759170b43 --clientSideComponentProperties '`{"sourceTermSet":"PnP-CollabFooter-SharedLinks","personalItemsStorageProperty":"PnP-CollabFooter-MyLinks"}`'
+    success 'DONE'
+  fi
+}
+
+# $1 site URL
+setupPortalExtensions() {
+  siteUrl=$1
+  sub '- Configuring extensions...\n'
+  setupCommonExtensions $siteUrl
+  sub '  - PortalFooter...'
+  if $(customActionExists PortalFooter $siteUrl); then
+    warning 'EXISTS'
+  else
+    o365 spo customaction add --url $siteUrl --title PortalFooter --name PortalFooter --location ClientSideExtension.ApplicationCustomizer --clientSideComponentId b8eb4ec9-934a-4248-a15f-863d27f94f60 --clientSideComponentProperties '`{"linksListTitle":"PnP-PortalFooter-Links","copyright":"Ⓒ Copyright Contoso, 2018","support":"support@contoso.com","personalItemsStorageProperty":"PnP-CollabFooter-MyLinks"}`'
     success 'DONE'
   fi
 }

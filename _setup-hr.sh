@@ -17,7 +17,7 @@ sub '- Applying theme...'
 o365 spo theme apply --name "$company HR" --webUrl $siteUrl >/dev/null
 success 'DONE'
 
-setupExtensions $siteUrl
+setupCollabExtensions $siteUrl
 
 sub '- Setting logo...'
 groupId=$(o365 graph o365group list --mailNickname $alias -o json | jq -r '.[] | select(.mailNickname == "'"$alias"'") | .id')

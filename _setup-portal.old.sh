@@ -44,24 +44,6 @@ success "    DONE"
 
 
 # Navigation requires pages to be provisioned first
-exit 1
-echo "Configuring navigation..."
-navigationNodes=($(o365 spo navigation node list --webUrl $portalUrl --location TopNavigationBar --output json | jq '.[] | .Id'))
-for node in "${navigationNodes}"; do
-  echo "  Removing node $node..."
-  o365 spo navigation node remove --webUrl $portalUrl --location TopNavigationBar --id $node --confirm
-  success "  DONE"
-done
-echo "  Creating node Personal..."
-o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title Personal --url SitePages/Personal.aspx
-success "  DONE"
-echo "  Creating node Organization..."
-o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title Organization --url SitePages/Home.aspx
-success "  DONE"
-echo "  Creating node Departments..."
-o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title Departments --url ' '
-success "  DONE"
-success "DONE"
 
 # TODO: provision lists
 # TODO: provision custom actions

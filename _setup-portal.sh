@@ -250,5 +250,7 @@ o365 spo list view set --webUrl $portalUrl --listTitle Alerts \
 success 'DONE'
 # /alerts
 
+setupPortalExtensions $portalUrl
+
 success 'DONE'
 echo
