@@ -1,20 +1,36 @@
-echo "Retrieving portal..."
-siteJson=$(o365 spo site get --url $portalUrl --output json)
-if [ -z "$siteJson" ]; then
-  error "Portal site at URL $portalUrl not found"
-  exit 1
+msg "Provisioning portal site at $portalUrl..."
+site=$(o365 spo site get --url $portalUrl --output json || true)
+if $(isError "$site"); then
+  o365 spo site add --type CommunicationSite --url $portalUrl --title "$company" --description 'PnP SP Starket Kit Hub' >/dev/null
+  success 'DONE'
+else
+  warning 'EXISTS'
 fi
 
-siteId=$(echo $siteJson | jq -r '.Id')
-success "DONE"
+sub '- Applying theme...'
+o365 spo theme apply --name "$company HR" --webUrl $portalUrl >/dev/null
+success 'DONE'
 
-echo "Setting PnPTilesList tenant property..."
-o365 spo storageentity set --appCatalogUrl $appCatalogUrl --key PnPTilesList-$(echo $siteJson) --value $portalUrl/Lists/PnPTiles
-success "DONE"
+sub '- Configuring hub site...'
+hubsiteId=$(o365 spo hubsite list --output json | jq -r '.[] | select(.SiteUrl == "'"$portalUrl"'") | .ID')
+if [ -z "$hubsiteId" ]; then
+  out=$(o365 spo hubsite register --url $portalUrl --output json || true)
+  if $(isError "$out"); then
+    error 'ERROR'
+    errorMessage "$out"
+    exit 1
+  fi
+  hubsiteId=$(echo "$out" | jq -r '.ID')
+  success 'DONE'
+else
+  warning 'EXISTS'
+fi
 
+sub '- Configuring logo...'
+o365 spo web set --webUrl $portalUrl --siteLogoUrl $(echo $portalUrl)/SiteAssets/contoso_sitelogo.png
+success 'DONE'
 
-
-
+sub '- Provisioning site columns...\n'
 fields=(
   '`<Field Type="DateTime" DisplayName="Start date-time" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" Format="DateTime" Group="PnP Columns" FriendlyDisplayFormat="Disabled" ID="{5ee2dd25-d941-455a-9bdb-7f2c54aed11b}" SourceID="{4f118c69-66e0-497c-96ff-d7855ce0713d}" StaticName="PnPAlertStartDateTime" Name="PnPAlertStartDateTime"><Default>[today]</Default></Field>`'
   '`<Field Type="URL" DisplayName="More information link" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" Format="Hyperlink" Group="PnP Columns" ID="{6085e32a-339b-4da7-ab6d-c1e013e5ab27}" SourceID="{4f118c69-66e0-497c-96ff-d7855ce0713d}" StaticName="PnPAlertMoreInformation" Name="PnPAlertMoreInformation"></Field>`'
@@ -27,42 +43,38 @@ fields=(
   '`<Field Type="Note" DisplayName="PnP Description" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" NumLines="6" RichText="FALSE" Sortable="FALSE" Group="PnP Columns" ID="{a67b73bf-acb0-4517-93e6-91585316ec49}" SourceID="{2765be97-bf5e-434d-b563-9f1b907b5397}" StaticName="PnPDescription" Name="PnPDescription"></Field>`'
 )
 
-echo "Provisioning site columns..."
 for fieldInfo in "${fields[@]}"; do
   fieldId=$(echo "$fieldInfo" | grep -o '\sID="{[^}]*' | cut -d"{" -f2)
-  echo "  Provisioning $fieldId..."
+  sub "  - $fieldId..."
   field=$(o365 spo field get --webUrl $portalUrl --id $fieldId --output json || true)
   if $(isError "$field"); then
-    echo "    Creating site column..."
-    o365 spo field add --webUrl $portalUrl --xml "$fieldInfo"
-    success "    DONE"
+    o365 spo field add --webUrl $portalUrl --xml "$fieldInfo" >/dev/null
+    success 'DONE'
   else
-    warning "    Site column already exists"
+    warning 'EXISTS'
   fi
 done
-success "DONE"
 
+sub '- Provisioning content types...\n'
 contentTypes=(
   'ID:"0x01007926A45D687BA842B947286090B8F67D" Name:"PnP Alert"',
   'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Name:"PnPTile"'
 )
 
-echo "Provisioning content types..."
 for contentTypeInfo in "${contentTypes[@]}"; do
   contentTypeId=$(getPropertyValue "$contentTypeInfo" "ID")
-  echo "  Provisioning content type $contentTypeId..."
+  sub "  - $contentTypeId..."
   contentType=$(o365 spo contenttype get --webUrl $portalUrl --id $contentTypeId --output json || true)
   if $(isError "$contentType"); then
-    echo "    Creating content type..."
     contentTypeName=$(getPropertyValue "$contentTypeInfo" "Name")
     o365 spo contenttype add --webUrl $portalUrl --id $contentTypeId --name "$contentTypeName" --group 'PnP Content Types'
-    success "    DONE"
+    success 'DONE'
   else
-    warning "    Content type already exists"
+    warning 'EXISTS'
   fi
 done
-success "DONE"
 
+sub '- Adding fields to content types...\n'
 # The Name argument is purely informative so that you can easily see which field it is
 contentTypesFields=(
   'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"ebe7e498-44ff-43da-a7e5-99b444f656a5" Name:"PnPAlertType" required:"true"',
@@ -77,65 +89,54 @@ contentTypesFields=(
   'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"4ad64f28-1772-492d-bde4-998a08f8a7ae" Name:"PnPUrlTarget"'
 )
 
-echo "Adding fields to content types..."
 for ctField in "${contentTypesFields[@]}"; do
   contentTypeId=$(getPropertyValue "$ctField" "ID")
   fieldId=$(getPropertyValue "$ctField" "Field")
   required=$(if [[ $ctField = *"required:"* ]]; then echo "--required true"; else echo ""; fi)
-  echo "  Adding field $fieldId to content type $contentTypeId..."
+  sub "  - Adding field $fieldId to content type $contentTypeId..."
   o365 spo contenttype field set --webUrl $portalUrl --contentTypeId $contentTypeId --fieldId $fieldId $required
-  success "  DONE"
+  success 'DONE'
 done
-success "DONE"
 
-# Provision pages
+sub '- Creating pages...\n'
+pages=(
+  'Name:"home.aspx" Title:"Home" Layout:"Home" PromoteAsNewsArticle:"false"',
+  'Name:"About-Us.aspx" Title:"About Us" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"HR.aspx" Title:"HR" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"People-Directory.aspx" Title:"People Directory" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"My-Profile.aspx" Title:"My Profile" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"Travel-Instructions.aspx" Title:"Travel Instructions" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"Financial-Results.aspx" Title:"Financial Results" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"FAQ.aspx" Title:"FAQ" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"Training.aspx" Title:"Training" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"Support.aspx" Title:"Support" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"Feedback.aspx" Title:"Feedback" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"Personal.aspx" Title:"Personal" Layout:"Article" PromoteAsNewsArticle:"false"',
+  'Name:"Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx" Title:"Meeting on Marketing In Non-English-Speaking Markets This Friday" Layout:"Article" PromoteAsNewsArticle:"true"',
+  'Name:"Marketing-Lunch.aspx" Title:"Marketing lunch" Layout:"Article" PromoteAsNewsArticle:"true"',
+  'Name:"New-International-Marketing-Initiatives.aspx" Title:"New International Marketing Initiatives" Layout:"Article" PromoteAsNewsArticle:"true"',
+  'Name:"New-Portal.aspx" Title:"New intranet portal" Layout:"Article" PromoteAsNewsArticle:"true"',
+)
 
-## Home page
-
-pageName="home.aspx"
-echo "Provisioning page $pageName..."
-page=$(o365 spo page get --webUrl $portalUrl --name $pageName --output json || true)
-if ! isError "$page"; then
-  warning "  Page $pageName already exists. Removing..."
-  o365 spo page remove --webUrl $portalUrl --name $pageName --confirm
-  success "  DONE"
-fi
-echo "  Creating page..."
-# TODO: remove layout type once we can provision sections, otherwise we end up with an empty page without sections to which we can't add web parts
-o365 spo page add --webUrl $portalUrl --name $pageName --layoutType Home
-success "  DONE"
-echo "  Adding sections..."
-echo "    #1"
-# TODO: o365 spo page section add --webUrl $portalUrl --name $pageName --sectionTemplate TwoColumnLeft --order 1
-echo "      Adding web parts..."
-echo "        Hero"
-o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName --standardWebPart Hero --webPartPropertiesFile portal-home-01-1-1-hero.json
-success "        DONE"
-success "      DONE"
-success "    DONE"
-
-
-# Navigation requires pages to be provisioned first
-exit 1
-echo "Configuring navigation..."
-navigationNodes=($(o365 spo navigation node list --webUrl $portalUrl --location TopNavigationBar --output json | jq '.[] | .Id'))
-for node in "${navigationNodes}"; do
-  echo "  Removing node $node..."
-  o365 spo navigation node remove --webUrl $portalUrl --location TopNavigationBar --id $node --confirm
-  success "  DONE"
+for pageInfo in "${pages[@]}"; do
+  pageName=$(getPropertyValue "$pageInfo" "Name")
+  pageTitle=$(getPropertyValue "$pageInfo" "Title")
+  layout=$(getPropertyValue "$pageInfo" "Layout")
+  promoteAsNews=$(getPropertyValue "$pageInfo" "PromoteAsNewsArticle")
+  promote=$(if $promoteAsNews = 'true'; then echo "--promoteAs NewsPage"; else echo ""; fi)
+  sub "  - $pageName..."
+  page=$(o365 spo page get --webUrl $portalUrl --name $pageName --output json || true)
+  if ! isError "$page"; then
+    warning 'EXISTS'
+    warningMsg "  - Removing $pageName..."
+    o365 spo page remove --webUrl $portalUrl --name $pageName --confirm
+    success 'DONE'
+    sub "  - Creating $pageName..."
+  fi
+  # TODO: remove layout type once we can provision sections, otherwise we end up with an empty page without sections to which we can't add web parts
+  o365 spo page add --webUrl $portalUrl --name $pageName --title "$pageTitle" --layoutType $layout $promote --publish
+  success 'DONE'
 done
-echo "  Creating node Personal..."
-o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title Personal --url SitePages/Personal.aspx
-success "  DONE"
-echo "  Creating node Organization..."
-o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title Organization --url SitePages/Home.aspx
-success "  DONE"
-echo "  Creating node Departments..."
-o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title Departments --url ' '
-success "  DONE"
-success "DONE"
 
-# TODO: provision lists
-# TODO: provision custom actions
-# TODO: provision files
-# TODO: install .sppkg
+success 'DONE'
+echo
