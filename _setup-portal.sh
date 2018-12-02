@@ -243,6 +243,11 @@ if [ -z "$contentType" ]; then
 else
   warning 'EXISTS'
 fi
+sub '    - Configuring All items view...'
+o365 spo list view set --webUrl $portalUrl --listTitle Alerts \
+  --viewTitle 'All Items' \
+  --ListViewXml '`<Query><OrderBy><FieldRef Name="ID" /></OrderBy></Query><ViewFields><FieldRef Name="LinkTitle" /><FieldRef Name="PnPAlertType" /><FieldRef Name="PnPAlertMessage" /><FieldRef Name="PnPAlertStartDateTime" /><FieldRef Name="PnPAlertEndDateTime" /><FieldRef Name="PnPAlertMoreInformation" /></ViewFields><RowLimit Paged="TRUE">30</RowLimit><JSLink>clienttemplates.js</JSLink><XslLink Default="TRUE">main.xsl</XslLink><Toolbar Type="Standard"/>`'
+success 'DONE'
 # /alerts
 
 success 'DONE'
