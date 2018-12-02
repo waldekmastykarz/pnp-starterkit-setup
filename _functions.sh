@@ -145,7 +145,7 @@ addOrUpdateListItem() {
   itemId=$(o365 spo listitem list --webUrl $1 --title "$2" --filter "Title eq '$3'" --output json | jq '.[0] | .Id')
   if [ $itemId = 'null' ]; then
     sub 'CREATING...'
-    o365 spo listitem add --webUrl $1 --listTitle "$2" "${@:4}" >/dev/null
+    o365 spo listitem add --webUrl $1 --listTitle "$2" --Title "$3" "${@:4}" >/dev/null
     success 'DONE'
   else
     sub 'UPDATING...'

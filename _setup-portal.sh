@@ -41,6 +41,8 @@ fields=(
   '`<Field Type="Choice" DisplayName="PnP Icon Name" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" Format="Dropdown" FillInChoice="TRUE" Group="PnP Columns" ID="{a374d13d-040b-4104-9973-edfdca1e3fc1}" SourceID="{2765be97-bf5e-434d-b563-9f1b907b5397}" StaticName="PnPIconName" Name="PnPIconName"><CHOICES><CHOICE>12PointStar</CHOICE><CHOICE>6PointStar</CHOICE><CHOICE>AADLogo</CHOICE><CHOICE>Accept</CHOICE><CHOICE>Accounts</CHOICE></CHOICES></Field>`'
   '`<Field Type="Text" DisplayName="PnP Url" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" MaxLength="255" Group="PnP Fields" ID="{9913d58a-9a75-41fc-86aa-f6de1d9328ba}" SourceID="{2765be97-bf5e-434d-b563-9f1b907b5397}" StaticName="PnPUrl" Name="PnPUrl"></Field>`'
   '`<Field Type="Note" DisplayName="PnP Description" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" NumLines="6" RichText="FALSE" Sortable="FALSE" Group="PnP Columns" ID="{a67b73bf-acb0-4517-93e6-91585316ec49}" SourceID="{2765be97-bf5e-434d-b563-9f1b907b5397}" StaticName="PnPDescription" Name="PnPDescription"></Field>`'
+  '`<Field Type="Choice" DisplayName="Link Group" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" Format="Dropdown" FillInChoice="TRUE" Group="PnP Columns" ID="{f5b23751-56d4-4ec3-adf2-7b080d834f74}" SourceID="{88a250c5-31b2-4d64-b047-482e2a6e5e7a}" StaticName="PnPPortalLinkGroup" Name="PnPPortalLinkGroup" CustomFormatter=""><CHOICES><CHOICE>Main Links</CHOICE></CHOICES></Field>`'
+  '`<Field Type="URL" DisplayName="Link URL" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" Format="Hyperlink" Group="PnP Columns" ID="{c10389a0-8b29-4866-951f-3ad8e138db03}" SourceID="{88a250c5-31b2-4d64-b047-482e2a6e5e7a}" StaticName="PnPPortalLinkUrl" Name="PnPPortalLinkUrl" CustomFormatter=""></Field>`'
 )
 
 for fieldInfo in "${fields[@]}"; do
@@ -57,8 +59,9 @@ done
 
 sub '- Provisioning content types...\n'
 contentTypes=(
-  'ID:"0x01007926A45D687BA842B947286090B8F67D" Name:"PnP Alert"',
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Name:"PnP Alert"'
   'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Name:"PnPTile"'
+  'ID:"0x0100580DB2292968A34EA3748511017A6DD2" Name:"PnPPortalLink"'
 )
 
 for contentTypeInfo in "${contentTypes[@]}"; do
@@ -77,16 +80,19 @@ done
 sub '- Adding fields to content types...\n'
 # The Name argument is purely informative so that you can easily see which field it is
 contentTypesFields=(
-  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"ebe7e498-44ff-43da-a7e5-99b444f656a5" Name:"PnPAlertType" required:"true"',
-  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"f056406b-b46b-4a94-8503-361de4ca2752" Name:"PnPAlertMessage" required:"true"',
-  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"5ee2dd25-d941-455a-9bdb-7f2c54aed11b" Name:"PnPAlertStartDateTime" required:"true"',
-  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"b0d8c6ed-2487-43e7-a716-bf274f0d5e09" Name:"PnPAlertEndDateTime" required:"true"',
-  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"6085e32a-339b-4da7-ab6d-c1e013e5ab27" Name:"PnPAlertMoreInformation"',
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"ebe7e498-44ff-43da-a7e5-99b444f656a5" Name:"PnPAlertType" required:"true"'
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"f056406b-b46b-4a94-8503-361de4ca2752" Name:"PnPAlertMessage" required:"true"'
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"5ee2dd25-d941-455a-9bdb-7f2c54aed11b" Name:"PnPAlertStartDateTime" required:"true"'
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"b0d8c6ed-2487-43e7-a716-bf274f0d5e09" Name:"PnPAlertEndDateTime" required:"true"'
+  'ID:"0x01007926A45D687BA842B947286090B8F67D" Field:"6085e32a-339b-4da7-ab6d-c1e013e5ab27" Name:"PnPAlertMoreInformation"'
 
-  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"a67b73bf-acb0-4517-93e6-91585316ec49" Name:"PnPDescription"',
-  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"a374d13d-040b-4104-9973-edfdca1e3fc1" Name:"PnPIconName"',
-  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"9913d58a-9a75-41fc-86aa-f6de1d9328ba" Name:"PnPUrl"',
+  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"a67b73bf-acb0-4517-93e6-91585316ec49" Name:"PnPDescription"'
+  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"a374d13d-040b-4104-9973-edfdca1e3fc1" Name:"PnPIconName"'
+  'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"9913d58a-9a75-41fc-86aa-f6de1d9328ba" Name:"PnPUrl"'
   'ID:"0x0100FF0B2E33A3718B46A3909298D240FD92" Field:"4ad64f28-1772-492d-bde4-998a08f8a7ae" Name:"PnPUrlTarget"'
+
+  'ID:"0x0100580DB2292968A34EA3748511017A6DD2" Field:"c10389a0-8b29-4866-951f-3ad8e138db03" Name:"PnPPortalLinkUrl"'
+  'ID:"0x0100580DB2292968A34EA3748511017A6DD2" Field:"f5b23751-56d4-4ec3-adf2-7b080d834f74" Name:"PnPPortalLinkGroup"'
 )
 
 for ctField in "${contentTypesFields[@]}"; do
@@ -191,32 +197,26 @@ fi
 
 sub '    - List items...\n'
 addOrUpdateListItem $portalUrl Events 'SharePoint Conference North America' \
-  --Title 'SharePoint Conference North America' \
   --fAllDayEvent true \
   --EventDate '2018-05-21 00:00:00' \
   --EndDate '2018-05-23 23:59:00'
 addOrUpdateListItem $portalUrl Events 'European Collaboration Summit' \
-  --Title 'European Collaboration Summit' \
   --fAllDayEvent true \
   --EventDate '2018-05-28 00:00:00' \
   --EndDate '2018-05-30 23:59:00'
 addOrUpdateListItem $portalUrl Events 'Microsoft Ignite' \
-  --Title 'Microsoft Ignite' \
   --fAllDayEvent true \
   --EventDate '2018-09-24 00:00:00' \
   --EndDate '2018-09-28 23:59:00'
 addOrUpdateListItem $portalUrl Events 'European SharePoint Conference' \
-  --Title 'European SharePoint Conference' \
   --fAllDayEvent true \
   --EventDate '2018-11-26 00:00:00' \
   --EndDate '2018-11-29 23:59:00'
 addOrUpdateListItem $portalUrl Events 'SharePoint Conference' \
-  --Title 'SharePoint Conference' \
   --fAllDayEvent true \
   --EventDate '2019-05-21 00:00:00' \
   --EndDate '2019-05-23 23:59:00'
 addOrUpdateListItem $portalUrl Events 'European Collaboration Summit' \
-  --Title 'SharePoint Conference' \
   --fAllDayEvent true \
   --EventDate '2019-05-27 00:00:00' \
   --EndDate '2019-05-29 23:59:00'
@@ -270,6 +270,75 @@ else
   warning 'EXISTS'
 fi
 # /Site Assets
+PnP-PortalFooter-Links
+sub '  - PnP-PortalFooter-Links...'
+list=$(o365 spo list get --webUrl $portalUrl --title PnP-PortalFooter-Links --output json || true)
+if $(isError "$list"); then
+  list=$(o365 spo list add --webUrl $portalUrl --title PnPPortalFooterLinks --baseTemplate GenericList \
+    --templateFeatureId 00bfea71-de22-43b2-a848-c05709900100 \
+    --contentTypesEnabled --output json || true)
+  if $(isError "$list"); then
+    error 'ERROR'
+    errorMessage "$list"
+    exit 1
+  fi
+  listId=$(echo $list | jq -r '.Id')
+  o365 spo list set --webUrl $portalUrl --id $listId --title PnP-PortalFooter-Links
+  success 'DONE'
+else
+  warning 'EXISTS'
+fi
+sub '    - Adding PnPPortalLink content type...'
+contentType=$(o365 spo list contenttype list --webUrl $portalUrl \
+  --listTitle PnP-PortalFooter-Links --output json | \
+  jq -r '.[] | select(.StringId | startswith("0x0100580DB2292968A34EA3748511017A6DD2")) | .StringId')
+if [ -z "$contentType" ]; then
+  o365 spo list contenttype add --webUrl $portalUrl --listTitle PnP-PortalFooter-Links \
+    --contentTypeId 0x0100580DB2292968A34EA3748511017A6DD2 >/dev/null
+  success 'DONE'
+else
+  warning 'EXISTS'
+fi
+sub '    - Configuring All items view...'
+o365 spo list view set --webUrl $portalUrl --listTitle PnP-PortalFooter-Links \
+  --viewTitle 'All Items' \
+  --ListViewXml '`<Query><GroupBy Collapse="TRUE" GroupLimit="30"><FieldRef Name="PnPPortalLinkGroup" />  </GroupBy><OrderBy><FieldRef Name="ID" /></OrderBy></Query><ViewFields><FieldRef Name="LinkTitle" /><FieldRef Name="PnPPortalLinkGroup" /><FieldRef Name="PnPPortalLinkUrl" /></ViewFields><RowLimit Paged="TRUE">30</RowLimit><Aggregations Value="Off" /><JSLink>clienttemplates.js</JSLink>`'
+success 'DONE'
+sub '    - List items...\n'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Find My Customers' \
+  --PnPPortalLinkGroup Applications \
+  --PnPPortalLinkUrl 'https://find.customers'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'CRM' \
+  --PnPPortalLinkGroup Applications \
+  --PnPPortalLinkUrl 'https://company.crm'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'ERP' \
+  --PnPPortalLinkGroup Applications \
+  --PnPPortalLinkUrl 'https://company.erp'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Technical Procedures' \
+  --PnPPortalLinkGroup Applications \
+  --PnPPortalLinkUrl 'https://tech.procs'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Expense Report Module' \
+  --PnPPortalLinkGroup 'Internal Modules' \
+  --PnPPortalLinkUrl 'https://expense.report'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Company Car Replacement' \
+  --PnPPortalLinkGroup 'Internal Modules' \
+  --PnPPortalLinkUrl 'https://need.new.car'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Vacation Request Module' \
+  --PnPPortalLinkGroup 'Internal Modules' \
+  --PnPPortalLinkUrl 'https://need.some.rest'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'CNN' \
+  --PnPPortalLinkGroup News \
+  --PnPPortalLinkUrl 'https://www.cnn.com/'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'BBC' \
+  --PnPPortalLinkGroup News \
+  --PnPPortalLinkUrl 'https://www.bbc.co.uk/'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'New York Times' \
+  --PnPPortalLinkGroup News \
+  --PnPPortalLinkUrl 'https://www.nytimes.com/'
+addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Forbes' \
+  --PnPPortalLinkGroup News \
+  --PnPPortalLinkUrl 'http://www.forbes.com/'
+# /PnP-PortalFooter-Links
 
 setupPortalExtensions $portalUrl
 
