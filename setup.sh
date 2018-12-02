@@ -102,6 +102,8 @@ fi
 
 msg 'Retrieving tenant app catalog URL...'
 portalUrl=$tenantUrl/sites/$(echo $prefix)portal
+hrUrl=$tenantUrl/sites/$(echo $prefix)hr
+marketingUrl=$tenantUrl/sites/$(echo $prefix)marketing
 appCatalogUrl=$(o365 spo tenant appcatalogurl get)
 if [ -z "$appCatalogUrl" ]; then
   error "Couldn't retrieve tenant app catalog"

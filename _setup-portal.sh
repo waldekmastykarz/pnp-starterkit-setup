@@ -138,5 +138,43 @@ for pageInfo in "${pages[@]}"; do
   success 'DONE'
 done
 
+sub '- Configuring navigation...\n'
+# remove old navigation nodes
+navigationNodes=($(o365 spo navigation node list --webUrl $portalUrl --location TopNavigationBar --output json | jq '.[] | .Id'))
+exists=${navigationNodes:-}
+if [ ! -z ${exists} ]; then
+  for node in "${navigationNodes[@]}"; do
+    warningMsg "  - Removing node $node..."
+    o365 spo navigation node remove --webUrl $portalUrl --location TopNavigationBar --id $node --confirm
+    success 'DONE'
+  done
+fi
+# create new navigation nodes
+navigationNodes=(
+  'Title:"Personal" Url:"SitePages/Personal.aspx"',
+  'Title:"Organization" Url:"SitePages/Home.aspx"',
+  'Title:"Departments" Url:" "'
+)
+departmentsNodes=(
+  "Title:\"Human Resources\" Url:\"$hrUrl\"",
+  "Title:\"Marketing\" Url:\"$marketingUrl\""
+)
+for node in "${navigationNodes[@]}"; do
+  nodeTitle=$(getPropertyValue "$node" "Title")
+  nodeUrl=$(getPropertyValue "$node" "Url")
+  sub "  - $nodeTitle..."
+  result=$(o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title "$nodeTitle" --url "$nodeUrl" --output json)
+  success 'DONE'
+done
+departmentsNodeId=$(echo $result | jq '.Id')
+
+for node in "${departmentsNodes[@]}"; do
+  nodeTitle=$(getPropertyValue "$node" "Title")
+  nodeUrl=$(getPropertyValue "$node" "Url")
+  sub "    - $nodeTitle..."
+  o365 spo navigation node add --webUrl $portalUrl --parentNodeId $departmentsNodeId --title "$nodeTitle" --url "$nodeUrl" >/dev/null
+  success 'DONE'
+done
+
 success 'DONE'
 echo

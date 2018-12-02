@@ -1,4 +1,4 @@
-siteUrl=$tenantUrl/sites/$(echo $prefix)marketing
+siteUrl=$marketingUrl
 alias=$(echo $prefix)marketing
 msg "Provisioning marketing site at $siteUrl..."
 site=$(o365 spo site get --url $siteUrl --output json || true)
