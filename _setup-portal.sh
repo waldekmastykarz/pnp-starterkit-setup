@@ -271,39 +271,42 @@ else
 fi
 # /Site Assets
 
-# setupPortalExtensions $portalUrl
+setupPortalExtensions $portalUrl
 
-# # files
-# sub '- Provisioning assets...\n'
-# files=(
-#   'Commercial16_smallmeeting_02.jpg',
-#   'MSSurface_Pro4_SMB_Seattle_0578.jpg',
-#   'WCO18_ITHelp_004.jpg',
-#   'WCO18_whiteboard_002.jpg',
-#   'Win17_15021_00_N9.jpg',
-#   'contoso_sitelogo.png',
-#   'hero.jpg',
-#   'logo_hr.png',
-#   'logo_marketing.png',
-#   'meeting-rooms.jpg',
-#   'page-faq.jpg',
-#   'page-feedback.jpg',
-#   'page-financial-results.jpg',
-#   'page-hr.jpg',
-#   'page-my-profile.jpg',
-#   'page-people-directory.jpg',
-#   'page-support.jpg',
-#   'page-training.jpg',
-#   'page-travel-instructions.jpg',
-#   'work-life-balance.png',
-#   'working-methods.jpg'
-# )
-# for file in "${files[@]}"; do
-#   sub "  - $file..."
-#   o365 spo file add --webUrl $portalUrl --folder ''
-#   success 'DONE'
-# done
-# # /files
+# files
+sub '- Provisioning assets...\n'
+files=(
+  'Commercial16_smallmeeting_02.jpg'
+  'MSSurface_Pro4_SMB_Seattle_0578.jpg'
+  'WCO18_ITHelp_004.jpg'
+  'WCO18_whiteboard_002.jpg'
+  'Win17_15021_00_N9.jpg'
+  'contoso_sitelogo.png'
+  'hero.jpg'
+  'logo_hr.png'
+  'logo_marketing.png'
+  'meeting-rooms.jpg'
+  'page-faq.jpg'
+  'page-feedback.jpg'
+  'page-financial-results.jpg'
+  'page-hr.jpg'
+  'page-my-profile.jpg'
+  'page-people-directory.jpg'
+  'page-support.jpg'
+  'page-training.jpg'
+  'page-travel-instructions.jpg'
+  'work-life-balance.png'
+  'working-methods.jpg'
+)
+for file in "${files[@]}"; do
+  sub "  - $file..."
+  o365 spo file add --webUrl $portalUrl --folder SiteAssets --path "./resources/images/$file"
+  success 'DONE'
+done
+sub "  - contoso_report.pptx..."
+o365 spo file add --webUrl $portalUrl --folder 'Shared Documents' --path "./resources/documents/contoso_report.pptx"
+success 'DONE'
+# /files
 
-# success 'DONE'
-# echo
+success 'DONE'
+echo
