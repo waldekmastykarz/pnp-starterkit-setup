@@ -104,24 +104,25 @@ for ctField in "${contentTypesFields[@]}"; do
   success 'DONE'
 done
 
-sub '- Creating pages...\n'
+sub '- Provisioning pages...\n'
+sub '  - Creating pages...\n'
 pages=(
-  'Name:"home.aspx" Title:"Home" Layout:"Home" PromoteAsNewsArticle:"false"',
-  'Name:"About-Us.aspx" Title:"About Us" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"HR.aspx" Title:"HR" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"People-Directory.aspx" Title:"People Directory" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"My-Profile.aspx" Title:"My Profile" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"Travel-Instructions.aspx" Title:"Travel Instructions" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"Financial-Results.aspx" Title:"Financial Results" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"FAQ.aspx" Title:"FAQ" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"Training.aspx" Title:"Training" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"Support.aspx" Title:"Support" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"Feedback.aspx" Title:"Feedback" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"Personal.aspx" Title:"Personal" Layout:"Article" PromoteAsNewsArticle:"false"',
-  'Name:"Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx" Title:"Meeting on Marketing In Non-English-Speaking Markets This Friday" Layout:"Article" PromoteAsNewsArticle:"true"',
-  'Name:"Marketing-Lunch.aspx" Title:"Marketing lunch" Layout:"Article" PromoteAsNewsArticle:"true"',
-  'Name:"New-International-Marketing-Initiatives.aspx" Title:"New International Marketing Initiatives" Layout:"Article" PromoteAsNewsArticle:"true"',
-  'Name:"New-Portal.aspx" Title:"New intranet portal" Layout:"Article" PromoteAsNewsArticle:"true"',
+  'Name:"home.aspx" Title:"Home" Layout:"Home" PromoteAsNewsArticle:"false"'
+  'Name:"About-Us.aspx" Title:"About Us" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"HR.aspx" Title:"HR" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"People-Directory.aspx" Title:"People Directory" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"My-Profile.aspx" Title:"My Profile" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Travel-Instructions.aspx" Title:"Travel Instructions" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Financial-Results.aspx" Title:"Financial Results" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"FAQ.aspx" Title:"FAQ" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Training.aspx" Title:"Training" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Support.aspx" Title:"Support" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Feedback.aspx" Title:"Feedback" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Personal.aspx" Title:"Personal" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx" Title:"Meeting on Marketing In Non-English-Speaking Markets This Friday" Layout:"Article" PromoteAsNewsArticle:"true"'
+  'Name:"Marketing-Lunch.aspx" Title:"Marketing lunch" Layout:"Article" PromoteAsNewsArticle:"true"'
+  'Name:"New-International-Marketing-Initiatives.aspx" Title:"New International Marketing Initiatives" Layout:"Article" PromoteAsNewsArticle:"true"'
+  'Name:"New-Portal.aspx" Title:"New intranet portal" Layout:"Article" PromoteAsNewsArticle:"true"'
 )
 
 for pageInfo in "${pages[@]}"; do
@@ -130,17 +131,51 @@ for pageInfo in "${pages[@]}"; do
   layout=$(getPropertyValue "$pageInfo" "Layout")
   promoteAsNews=$(getPropertyValue "$pageInfo" "PromoteAsNewsArticle")
   promote=$(if $promoteAsNews = 'true'; then echo "--promoteAs NewsPage"; else echo ""; fi)
-  sub "  - $pageName..."
+  sub "    - $pageName..."
   page=$(o365 spo page get --webUrl $portalUrl --name $pageName --output json || true)
   if ! isError "$page"; then
     warning 'EXISTS'
-    warningMsg "  - Removing $pageName..."
+    warningMsg "    - Removing $pageName..."
     o365 spo page remove --webUrl $portalUrl --name $pageName --confirm
     success 'DONE'
-    sub "  - Creating $pageName..."
+    sub "    - Creating $pageName..."
   fi
   # TODO: remove layout type once we can provision sections, otherwise we end up with an empty page without sections to which we can't add web parts
   o365 spo page add --webUrl $portalUrl --name $pageName --title "$pageTitle" --layoutType $layout $promote --publish
+  success 'DONE'
+done
+
+sub '  - Configuring headers...\n'
+pages=(
+  'Name:"About-Us.aspx" Image:"hero.jpg" X:"42.3837520042758" Y:"56.4285714285714"'
+  'Name:"HR.aspx" Image:"page-hr.jpg" X:"44.5216461785142" Y:"53.9285714285714"'
+  'Name:"People-Directory.aspx" Image:"page-people-directory.jpg" X:"50.1336183858899" Y:"30"'
+  'Name:"My-Profile.aspx" Image:"page-my-profile.jpg" X:"46.4457509353287" Y:"38.2142857142857"'
+  'Name:"Travel-Instructions.aspx" Image:"page-travel-instructions.jpg" X:"51.6835916622127" Y:"67.8571428571429"'
+  'Name:"Financial-Results.aspx" Image:"page-financial-results.jpg" X:"50.0801710315339" Y:"75.7142857142857"'
+  'Name:"FAQ.aspx" Image:"page-faq.jpg" X:"45.6440406199893" Y:"64.2857142857143"'
+  'Name:"Training.aspx" Image:"page-training.jpg" X:"51.4163548904329" Y:"15.3571428571429"'
+  'Name:"Support.aspx" Image:"page-support.jpg" X:" " Y:" "'
+  'Name:"Feedback.aspx" Image:"page-feedback.jpg" X:"48.9043292357028" Y:"33.2142857142857"'
+  # image doesn't exist in the starter kit
+  # 'Name:"Personal.aspx" Image:"modernOffice_002.jpg" X:"22.0604099244876" Y:"49.6428571428571"'
+  'Name:"Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx" Image:"MSSurface_Pro4_SMB_Seattle_0578.jpg" X:"44.4279786603438" Y:"28.9285714285714"'
+  'Name:"Marketing-Lunch.aspx" Image:"Commercial16_smallmeeting_02.jpg" X:"43.1238885595732" Y:"28.5714285714286"'
+  'Name:"New-International-Marketing-Initiatives.aspx" Image:"Win17_15021_00_N9.jpg" X:"35.8006487761722" Y:"55.3571428571429"'
+  'Name:"New-Portal.aspx" Image:"WCO18_ITHelp_004.jpg" X:"38.0713653789443" Y:"66.7857142857143"'
+)
+
+for pageInfo in "${pages[@]}"; do
+  pageName=$(getPropertyValue "$pageInfo" "Name")
+  image=$(getPropertyValue "$pageInfo" "Image")
+  x=$(getPropertyValue "$pageInfo" "X")
+  y=$(getPropertyValue "$pageInfo" "Y")
+  sub "    - $pageName..."
+  o365 spo page header set --webUrl $portalUrl --pageName $pageName \
+    --type Custom \
+    --imageUrl "/sites/$(echo $prefix)portal/SiteAssets/$image" \
+    --translateX $x \
+    --translateY $y
   success 'DONE'
 done
 
