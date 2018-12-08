@@ -7,6 +7,19 @@ else
   warning 'EXISTS'
 fi
 
+# IDs required for provisioning web parts
+sub '- Retrieving site ID...'
+siteId=$(o365 spo site get --url $portalUrl --output json | jq -r '.Id')
+success 'DONE'
+
+sub '- Retrieving root web ID...'
+webId=$(o365 spo web get --webUrl $portalUrl --output json | jq -r '.Id')
+success 'DONE'
+
+sub '- Retrieving Site Pages list ID...'
+sitePagesListId=$(o365 spo list get --webUrl $portalUrl --title 'Site Pages' --output json | jq -r '.Id')
+success 'DONE'
+
 sub '- Applying theme...'
 o365 spo theme apply --name "$company HR" --webUrl $portalUrl >/dev/null
 success 'DONE'
@@ -104,119 +117,6 @@ for ctField in "${contentTypesFields[@]}"; do
   success 'DONE'
 done
 
-sub '- Provisioning pages...\n'
-sub '  - Creating pages...\n'
-pages=(
-  'Name:"home.aspx" Title:"Home" Layout:"Home" PromoteAsNewsArticle:"false"'
-  'Name:"About-Us.aspx" Title:"About Us" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"HR.aspx" Title:"HR" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"People-Directory.aspx" Title:"People Directory" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"My-Profile.aspx" Title:"My Profile" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"Travel-Instructions.aspx" Title:"Travel Instructions" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"Financial-Results.aspx" Title:"Financial Results" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"FAQ.aspx" Title:"FAQ" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"Training.aspx" Title:"Training" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"Support.aspx" Title:"Support" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"Feedback.aspx" Title:"Feedback" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"Personal.aspx" Title:"Personal" Layout:"Article" PromoteAsNewsArticle:"false"'
-  'Name:"Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx" Title:"Meeting on Marketing In Non-English-Speaking Markets This Friday" Layout:"Article" PromoteAsNewsArticle:"true"'
-  'Name:"Marketing-Lunch.aspx" Title:"Marketing lunch" Layout:"Article" PromoteAsNewsArticle:"true"'
-  'Name:"New-International-Marketing-Initiatives.aspx" Title:"New International Marketing Initiatives" Layout:"Article" PromoteAsNewsArticle:"true"'
-  'Name:"New-Portal.aspx" Title:"New intranet portal" Layout:"Article" PromoteAsNewsArticle:"true"'
-)
-
-for pageInfo in "${pages[@]}"; do
-  pageName=$(getPropertyValue "$pageInfo" "Name")
-  pageTitle=$(getPropertyValue "$pageInfo" "Title")
-  layout=$(getPropertyValue "$pageInfo" "Layout")
-  promoteAsNews=$(getPropertyValue "$pageInfo" "PromoteAsNewsArticle")
-  promote=$(if $promoteAsNews = 'true'; then echo "--promoteAs NewsPage"; else echo ""; fi)
-  sub "    - $pageName..."
-  page=$(o365 spo page get --webUrl $portalUrl --name $pageName --output json || true)
-  if ! isError "$page"; then
-    warning 'EXISTS'
-    warningMsg "    - Removing $pageName..."
-    o365 spo page remove --webUrl $portalUrl --name $pageName --confirm
-    success 'DONE'
-    sub "    - Creating $pageName..."
-  fi
-  # TODO: remove layout type once we can provision sections, otherwise we end up with an empty page without sections to which we can't add web parts
-  o365 spo page add --webUrl $portalUrl --name $pageName --title "$pageTitle" --layoutType $layout $promote --publish
-  success 'DONE'
-done
-
-sub '  - Configuring headers...\n'
-pages=(
-  'Name:"About-Us.aspx" Image:"hero.jpg" X:"42.3837520042758" Y:"56.4285714285714"'
-  'Name:"HR.aspx" Image:"page-hr.jpg" X:"44.5216461785142" Y:"53.9285714285714"'
-  'Name:"People-Directory.aspx" Image:"page-people-directory.jpg" X:"50.1336183858899" Y:"30"'
-  'Name:"My-Profile.aspx" Image:"page-my-profile.jpg" X:"46.4457509353287" Y:"38.2142857142857"'
-  'Name:"Travel-Instructions.aspx" Image:"page-travel-instructions.jpg" X:"51.6835916622127" Y:"67.8571428571429"'
-  'Name:"Financial-Results.aspx" Image:"page-financial-results.jpg" X:"50.0801710315339" Y:"75.7142857142857"'
-  'Name:"FAQ.aspx" Image:"page-faq.jpg" X:"45.6440406199893" Y:"64.2857142857143"'
-  'Name:"Training.aspx" Image:"page-training.jpg" X:"51.4163548904329" Y:"15.3571428571429"'
-  'Name:"Support.aspx" Image:"page-support.jpg" X:" " Y:" "'
-  'Name:"Feedback.aspx" Image:"page-feedback.jpg" X:"48.9043292357028" Y:"33.2142857142857"'
-  # image doesn't exist in the starter kit
-  # 'Name:"Personal.aspx" Image:"modernOffice_002.jpg" X:"22.0604099244876" Y:"49.6428571428571"'
-  'Name:"Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx" Image:"MSSurface_Pro4_SMB_Seattle_0578.jpg" X:"44.4279786603438" Y:"28.9285714285714"'
-  'Name:"Marketing-Lunch.aspx" Image:"Commercial16_smallmeeting_02.jpg" X:"43.1238885595732" Y:"28.5714285714286"'
-  'Name:"New-International-Marketing-Initiatives.aspx" Image:"Win17_15021_00_N9.jpg" X:"35.8006487761722" Y:"55.3571428571429"'
-  'Name:"New-Portal.aspx" Image:"WCO18_ITHelp_004.jpg" X:"38.0713653789443" Y:"66.7857142857143"'
-)
-
-for pageInfo in "${pages[@]}"; do
-  pageName=$(getPropertyValue "$pageInfo" "Name")
-  image=$(getPropertyValue "$pageInfo" "Image")
-  x=$(getPropertyValue "$pageInfo" "X")
-  y=$(getPropertyValue "$pageInfo" "Y")
-  sub "    - $pageName..."
-  o365 spo page header set --webUrl $portalUrl --pageName $pageName \
-    --type Custom \
-    --imageUrl "/sites/$(echo $prefix)portal/SiteAssets/$image" \
-    --translateX $x \
-    --translateY $y
-  success 'DONE'
-done
-
-sub '- Configuring navigation...\n'
-# remove old navigation nodes
-navigationNodes=($(o365 spo navigation node list --webUrl $portalUrl --location TopNavigationBar --output json | jq '.[] | .Id'))
-exists=${navigationNodes:-}
-if [ ! -z ${exists} ]; then
-  for node in "${navigationNodes[@]}"; do
-    warningMsg "  - Removing node $node..."
-    o365 spo navigation node remove --webUrl $portalUrl --location TopNavigationBar --id $node --confirm
-    success 'DONE'
-  done
-fi
-# create new navigation nodes
-navigationNodes=(
-  'Title:"Personal" Url:"SitePages/Personal.aspx"',
-  'Title:"Organization" Url:"SitePages/Home.aspx"',
-  'Title:"Departments" Url:" "'
-)
-departmentsNodes=(
-  "Title:\"Human Resources\" Url:\"$hrUrl\"",
-  "Title:\"Marketing\" Url:\"$marketingUrl\""
-)
-for node in "${navigationNodes[@]}"; do
-  nodeTitle=$(getPropertyValue "$node" "Title")
-  nodeUrl=$(getPropertyValue "$node" "Url")
-  sub "  - $nodeTitle..."
-  result=$(o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title "$nodeTitle" --url "$nodeUrl" --output json)
-  success 'DONE'
-done
-departmentsNodeId=$(echo $result | jq '.Id')
-
-for node in "${departmentsNodes[@]}"; do
-  nodeTitle=$(getPropertyValue "$node" "Title")
-  nodeUrl=$(getPropertyValue "$node" "Url")
-  sub "    - $nodeTitle..."
-  o365 spo navigation node add --webUrl $portalUrl --parentNodeId $departmentsNodeId --title "$nodeTitle" --url "$nodeUrl" >/dev/null
-  success 'DONE'
-done
-
 sub '- Provisioning lists...\n'
 events
 sub '  - Events...'
@@ -298,10 +198,11 @@ if $(isError "$list"); then
     errorMessage "$list"
     exit 1
   fi
-  listId=$(echo $list | jq -r '.Id')
-  o365 spo list set --webUrl $portalUrl --id $listId --title 'Site Assets'
+  siteAssetsListId=$(echo $list | jq -r '.Id')
+  o365 spo list set --webUrl $portalUrl --id $siteAssetsListId --title 'Site Assets'
   success 'DONE'
 else
+  siteAssetsListId=$(echo $list | jq -r '.Id')
   warning 'EXISTS'
 fi
 # /Site Assets
@@ -375,8 +276,6 @@ addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Forbes' \
   --PnPPortalLinkUrl 'http://www.forbes.com/'
 # /PnP-PortalFooter-Links
 
-setupPortalExtensions $portalUrl
-
 # files
 sub '- Provisioning assets...\n'
 files=(
@@ -390,6 +289,9 @@ files=(
   'logo_hr.png'
   'logo_marketing.png'
   'meeting-rooms.jpg'
+  'modernOffice_002.jpg'
+  'modernOffice_007.jpg'
+  'modernOffice_011.jpg'
   'page-faq.jpg'
   'page-feedback.jpg'
   'page-financial-results.jpg'
@@ -411,6 +313,170 @@ sub "  - contoso_report.pptx..."
 o365 spo file add --webUrl $portalUrl --folder 'Shared Documents' --path "./resources/documents/contoso_report.pptx"
 success 'DONE'
 # /files
+
+# IDs required for provisioning web parts
+sub '- Retrieving ID for file hero.jpg...'
+heroJpgId=$(o365 spo file get --webUrl $portalUrl --url /sites/$(echo $prefix)portal/SiteAssets/hero.jpg --output json | jq -r '.UniqueId')
+success 'DONE'
+sub '- Retrieving ID for file modernOffice_007.jpg...'
+modernOffice_007JpgId=$(o365 spo file get --webUrl $portalUrl --url /sites/$(echo $prefix)portal/SiteAssets/modernOffice_007.jpg --output json | jq -r '.UniqueId')
+success 'DONE'
+sub '- Retrieving ID for file modernOffice_011.jpg...'
+modernOffice_011JpgId=$(o365 spo file get --webUrl $portalUrl --url /sites/$(echo $prefix)portal/SiteAssets/modernOffice_011.jpg --output json | jq -r '.UniqueId')
+success 'DONE'
+sub '- Retrieving ID for file WCO18_hallwayWalk_004.jpg...'
+WCO18_hallwayWalk_004JpgId=$(o365 spo file get --webUrl $portalUrl --url /sites/$(echo $prefix)portal/SiteAssets/WCO18_hallwayWalk_004.jpg --output json | jq -r '.UniqueId')
+success 'DONE'
+
+sub '- Provisioning pages...\n'
+sub '  - Creating pages...\n'
+pages=(
+  'Name:"home.aspx" Title:"Home" Layout:"Home" PromoteAsNewsArticle:"false"'
+  'Name:"About-Us.aspx" Title:"About Us" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"HR.aspx" Title:"HR" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"People-Directory.aspx" Title:"People Directory" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"My-Profile.aspx" Title:"My Profile" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Travel-Instructions.aspx" Title:"Travel Instructions" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Financial-Results.aspx" Title:"Financial Results" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"FAQ.aspx" Title:"FAQ" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Training.aspx" Title:"Training" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Support.aspx" Title:"Support" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Feedback.aspx" Title:"Feedback" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Personal.aspx" Title:"Personal" Layout:"Article" PromoteAsNewsArticle:"false"'
+  'Name:"Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx" Title:"Meeting on Marketing In Non-English-Speaking Markets This Friday" Layout:"Article" PromoteAsNewsArticle:"true"'
+  'Name:"Marketing-Lunch.aspx" Title:"Marketing lunch" Layout:"Article" PromoteAsNewsArticle:"true"'
+  'Name:"New-International-Marketing-Initiatives.aspx" Title:"New International Marketing Initiatives" Layout:"Article" PromoteAsNewsArticle:"true"'
+  'Name:"New-Portal.aspx" Title:"New intranet portal" Layout:"Article" PromoteAsNewsArticle:"true"'
+)
+
+for pageInfo in "${pages[@]}"; do
+  pageName=$(getPropertyValue "$pageInfo" "Name")
+  pageTitle=$(getPropertyValue "$pageInfo" "Title")
+  layout=$(getPropertyValue "$pageInfo" "Layout")
+  promoteAsNews=$(getPropertyValue "$pageInfo" "PromoteAsNewsArticle")
+  promote=$(if $promoteAsNews = 'true'; then echo "--promoteAs NewsPage"; else echo ""; fi)
+  sub "    - $pageName..."
+  page=$(o365 spo page get --webUrl $portalUrl --name $pageName --output json || true)
+  if ! isError "$page"; then
+    warning 'EXISTS'
+    warningMsg "    - Removing $pageName..."
+    o365 spo page remove --webUrl $portalUrl --name $pageName --confirm
+    success 'DONE'
+    sub "    - Creating $pageName..."
+  fi
+  o365 spo page add --webUrl $portalUrl --name $pageName --title "$pageTitle" $promote --publish
+  success 'DONE'
+done
+
+sub '  - Configuring headers...\n'
+pages=(
+  'Name:"About-Us.aspx" Image:"hero.jpg" X:"42.3837520042758" Y:"56.4285714285714"'
+  'Name:"HR.aspx" Image:"page-hr.jpg" X:"44.5216461785142" Y:"53.9285714285714"'
+  'Name:"People-Directory.aspx" Image:"page-people-directory.jpg" X:"50.1336183858899" Y:"30"'
+  'Name:"My-Profile.aspx" Image:"page-my-profile.jpg" X:"46.4457509353287" Y:"38.2142857142857"'
+  'Name:"Travel-Instructions.aspx" Image:"page-travel-instructions.jpg" X:"51.6835916622127" Y:"67.8571428571429"'
+  'Name:"Financial-Results.aspx" Image:"page-financial-results.jpg" X:"50.0801710315339" Y:"75.7142857142857"'
+  'Name:"FAQ.aspx" Image:"page-faq.jpg" X:"45.6440406199893" Y:"64.2857142857143"'
+  'Name:"Training.aspx" Image:"page-training.jpg" X:"51.4163548904329" Y:"15.3571428571429"'
+  'Name:"Support.aspx" Image:"page-support.jpg" X:" " Y:" "'
+  'Name:"Feedback.aspx" Image:"page-feedback.jpg" X:"48.9043292357028" Y:"33.2142857142857"'
+  'Name:"Personal.aspx" Image:"modernOffice_002.jpg" X:"22.0604099244876" Y:"49.6428571428571"'
+  'Name:"Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx" Image:"MSSurface_Pro4_SMB_Seattle_0578.jpg" X:"44.4279786603438" Y:"28.9285714285714"'
+  'Name:"Marketing-Lunch.aspx" Image:"Commercial16_smallmeeting_02.jpg" X:"43.1238885595732" Y:"28.5714285714286"'
+  'Name:"New-International-Marketing-Initiatives.aspx" Image:"Win17_15021_00_N9.jpg" X:"35.8006487761722" Y:"55.3571428571429"'
+  'Name:"New-Portal.aspx" Image:"WCO18_ITHelp_004.jpg" X:"38.0713653789443" Y:"66.7857142857143"'
+)
+
+for pageInfo in "${pages[@]}"; do
+  pageName=$(getPropertyValue "$pageInfo" "Name")
+  image=$(getPropertyValue "$pageInfo" "Image")
+  x=$(getPropertyValue "$pageInfo" "X")
+  y=$(getPropertyValue "$pageInfo" "Y")
+  sub "    - $pageName..."
+  o365 spo page header set --webUrl $portalUrl --pageName $pageName \
+    --type Custom \
+    --imageUrl "/sites/$(echo $prefix)portal/SiteAssets/$image" \
+    --translateX $x \
+    --translateY $y
+  success 'DONE'
+done
+
+sub '  - Provisioning page contents...\n'
+sub '    - home.aspx...\n'
+pageName=home.aspx
+sub '      - Sections...\n'
+sections=(
+  'Template:"TwoColumnLeft" Order:"1"'
+  'Template:"TwoColumnLeft" Order:"2"'
+  'Template:"TwoColumnLeft" Order:"3"'
+  'Template:"ThreeColumn" Order:"4"'
+  'Template:"ThreeColumn" Order:"5"'
+)
+for section in "${sections[@]}"; do
+  template=$(getPropertyValue "$section" "Template")
+  order=$(getPropertyValue "$section" "Order")
+  sub "        - $order..."
+  o365 spo page section add --webUrl $portalUrl --name $pageName \
+    --sectionTemplate $template --order $order
+  success 'DONE'
+done
+sub '      - Web parts...\n'
+sub '        - Hero...'
+webPartData='{ "dataVersion": "1.3", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{"content[0].title":"About Us","content[1].title":"Human Resources","content[2].title":"Mission","content[3].title":"Projects\n","content[4].title":"Organization","content[0].alternateText":"Company default image","content[1].alternateText":"","content[2].alternateText":"","content[3].alternateText":"","content[4].alternateText":"","content[0].callToActionText":"Learn more","content[1].callToActionText":"Learn more","content[2].callToActionText":"Learn more","content[3].callToActionText":"Learn more","content[4].callToActionText":"Learn more"},"imageSources":{"content[0].image.url":"{site}/SiteAssets/hero.jpg","content[2].image.url":"{site}/SiteAssets/modernOffice_007.jpg","content[3].image.url":"{site}/SiteAssets/modernOffice_011.jpg","content[0].previewImage.url":"{site}/SitePages/About-Us.aspx","content[1].previewImage.url":"https://www.bing.com","content[2].previewImage.url":"{site}/SiteAssets/WCO18_hallwayWalk_004.jpg","content[3].previewImage.url":"{site}/SiteAssets/modernOffice_011.jpg","content[4].previewImage.url":"https://www.bing.com"},"links":{"content[0].link":"{site}/SitePages/About-Us.aspx","content[1].link":"https://www.bing.com","content[2].link":"{site}/SiteAssets/WCO18_hallwayWalk_004.jpg","content[3].link":"{site}/SiteAssets/modernOffice_011.jpg","content[4].link":"https://www.bing.com","content[0].callToActionLink":"{site}/SiteAssets/modernOffice_002.jpg"},"componentDependencies":{"heroLayoutComponentId":"9586b262-54de-4b27-9eb9-34c671400c33","carouselLayoutComponentId":"8ac0c53c-e8d0-4e3e-87d0-7449eb0d4027"},"customMetadata":{"heroLayoutComponentId":{"minCanvasWidth":640},"carouselLayoutComponentId":{"maxCanvasWidth":639}}}, "properties": {"heroLayoutThreshold":640,"carouselLayoutMaxWidth":639,"isFullWidth":true,"layoutCategory":1,"layout":5,"content":[{"id":"9eff894c-f593-4427-a706-413b1cef88c1","type":"Web Page","color":4,"image":{"zoomRatio":1,"siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{listid:Site Assets}","id":"{heroJpgId}"},"description":"","showDescription":false,"showTitle":true,"imageDisplayOption":3,"isDefaultImage":false,"showCallToAction":true,"isDefaultImageLoaded":false,"isCustomImageLoaded":true,"showFeatureText":false,"previewImage":{"zoomRatio":1,"siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{listid:Site Pages}"}},{"id":"4c8a3a11-58eb-45c5-9c68-e7171a4511c5","type":"UrlLink","color":5,"description":"","showDescription":false,"showTitle":true,"imageDisplayOption":2,"isDefaultImage":false,"showCallToAction":false,"isDefaultImageLoaded":false,"isCustomImageLoaded":false,"showFeatureText":false,"previewImage":{"minCanvasWidth":32767}},{"id":"ffff73bd-e508-41ab-990f-ebe6c23939ba","type":"Image","color":4,"image":{"siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{listid:Site Assets}","id":"{modernOffice_007JpgId}","minCanvasWidth":32767},"description":"","showDescription":false,"showTitle":true,"imageDisplayOption":1,"isDefaultImage":false,"showCallToAction":false,"isDefaultImageLoaded":true,"isCustomImageLoaded":false,"showFeatureText":false,"previewImage":{"siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{{listid:Site Assets}}","id":"{WCO18_hallwayWalk_004JpgId}","widthFactor":0.25,"minCanvasWidth":640}},{"id":"5972b83b-7497-4d20-bd1a-8c50c96ac2fc","type":"Image","color":4,"image":{"siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{listid:Site Assets}","id":"{modernOffice_011JpgId}","minCanvasWidth":32767},"description":"","showDescription":false,"showTitle":true,"imageDisplayOption":1,"isDefaultImage":false,"showCallToAction":false,"isDefaultImageLoaded":true,"isCustomImageLoaded":false,"showFeatureText":false,"previewImage":{"siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{listid:Site Assets}","id":"{modernOffice_011JpgId}","widthFactor":0.25,"minCanvasWidth":32767}},{"id":"f743acc1-186b-4699-be7a-6a9773ae08f7","type":"UrlLink","color":5,"description":"","showDescription":false,"showTitle":true,"imageDisplayOption":2,"isDefaultImage":false,"showCallToAction":false,"isDefaultImageLoaded":false,"isCustomImageLoaded":false,"showFeatureText":false,"previewImage":{"minCanvasWidth":32767}}]}}'
+webPartData=$(echo "${webPartData//\{sitecollectionid\}/$siteId}")
+webPartData=$(echo "${webPartData//\{siteid\}/$webId}")
+webPartData=$(echo "${webPartData//\{listid:Site Assets\}/$siteAssetsListId}")
+webPartData=$(echo "${webPartData//\{listid:Site Pages\}/$sitePagesListId}")
+webPartData=$(echo "${webPartData//\{site\}/$portalUrl}")
+webPartData=$(echo "${webPartData//\{heroJpgId\}/$heroJpgId}")
+webPartData=$(echo "${webPartData//\{modernOffice_007JpgId\}/$modernOffice_007JpgId}")
+webPartData=$(echo "${webPartData//\{modernOffice_011JpgId\}/$modernOffice_011JpgId}")
+webPartData=$(echo "${webPartData//\{WCO18_hallwayWalk_004JpgId\}/$WCO18_hallwayWalk_004JpgId}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --standardWebPart Hero \
+  --section 1 --column 1 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+
+sub '- Configuring navigation...\n'
+# remove old navigation nodes
+navigationNodes=($(o365 spo navigation node list --webUrl $portalUrl --location TopNavigationBar --output json | jq '.[] | .Id'))
+exists=${navigationNodes:-}
+if [ ! -z ${exists} ]; then
+  for node in "${navigationNodes[@]}"; do
+    warningMsg "  - Removing node $node..."
+    o365 spo navigation node remove --webUrl $portalUrl --location TopNavigationBar --id $node --confirm
+    success 'DONE'
+  done
+fi
+# create new navigation nodes
+navigationNodes=(
+  'Title:"Personal" Url:"SitePages/Personal.aspx"',
+  'Title:"Organization" Url:"SitePages/Home.aspx"',
+  'Title:"Departments" Url:" "'
+)
+departmentsNodes=(
+  "Title:\"Human Resources\" Url:\"$hrUrl\"",
+  "Title:\"Marketing\" Url:\"$marketingUrl\""
+)
+for node in "${navigationNodes[@]}"; do
+  nodeTitle=$(getPropertyValue "$node" "Title")
+  nodeUrl=$(getPropertyValue "$node" "Url")
+  sub "  - $nodeTitle..."
+  result=$(o365 spo navigation node add --webUrl $portalUrl --location TopNavigationBar --title "$nodeTitle" --url "$nodeUrl" --output json)
+  success 'DONE'
+done
+departmentsNodeId=$(echo $result | jq '.Id')
+
+for node in "${departmentsNodes[@]}"; do
+  nodeTitle=$(getPropertyValue "$node" "Title")
+  nodeUrl=$(getPropertyValue "$node" "Url")
+  sub "    - $nodeTitle..."
+  o365 spo navigation node add --webUrl $portalUrl --parentNodeId $departmentsNodeId --title "$nodeTitle" --url "$nodeUrl" >/dev/null
+  success 'DONE'
+done
+
+setupPortalExtensions $portalUrl
 
 success 'DONE'
 echo
