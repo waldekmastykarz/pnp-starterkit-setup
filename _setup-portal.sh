@@ -118,15 +118,22 @@ for ctField in "${contentTypesFields[@]}"; do
 done
 
 sub '- Provisioning lists...\n'
-events
+# events
 sub '  - Events...'
 list=$(o365 spo list get --webUrl $portalUrl --title Events --output json || true)
 if $(isError "$list"); then
-  o365 spo list add --webUrl $portalUrl --title Events --baseTemplate Events \
+  list=$(o365 spo list add --webUrl $portalUrl --title Events --baseTemplate Events \
     --templateFeatureId 00bfea71-ec85-4903-972d-ebe475780106 \
-    --contentTypesEnabled >/dev/null
+    --contentTypesEnabled --output json || true)
+  if $(isError "$list"); then
+    error 'ERROR'
+    errorMessage "$list"
+    exit 1
+  fi
+  eventsListId=$(echo $list | jq -r '.Id')
   success 'DONE'
 else
+  eventsListId=$(echo $list | jq -r '.Id')
   warning 'EXISTS'
 fi
 
@@ -444,6 +451,27 @@ webPartData=$(echo "${webPartData//\{hosturl\}/}")
 o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
   --webPartId 26cb4af3-7f48-4737-b82a-4e24167c2d07 \
   --section 1 --column 2 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+sub '        - NewsReel...'
+webPartData='{ "dataVersion": "1.5", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{"title":"Company News"},"imageSources":{},"links":{"baseUrl":"{hosturl}{site}"},"componentDependencies":{"layoutComponentId":"a2752e70-c076-41bf-a42e-1d955b449fbc"}}, "properties": {"layoutId":"FeaturedNews","filters":[{"filterType":1,"value":"","values":[]}],"newsDataSourceProp":1,"dataProviderId":"viewCounts","newsSiteList":[],"renderItemsSliderValue":3,"webId":"{siteid}","siteId":"{sitecollectionid}","templateId":"FeaturedNews","propsLastEdited":"2018-07-09T22:55:36.594Z","showChrome":true,"prefetchCount":4,"compactMode":false}}'
+webPartData=$(echo "${webPartData//\{site\}/$portalUrl}")
+webPartData=$(echo "${webPartData//\{hosturl\}/}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --standardWebPart NewsReel \
+  --section 2 --column 1 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+sub '        - Events...'
+webPartData='{ "dataVersion": "1.2", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{"title":"Company Events"},"imageSources":{},"links":{"baseUrl":"{hosturl}{site}"},"componentDependencies":{"layoutComponentId":"0447e11d-bed9-4898-b600-8dbcd95e9cc2"}}, "properties": {"selectedListId":"{listid:Events}","selectedCategory":"","dateRangeOption":0,"startDate":"","endDate":"","isOnSeeAllPage":false,"layoutId":"Flex","dataProviderId":"Event","webId":"{siteid}","siteId":"{sitecollectionid}","layout":"Filmstrip","dataSource":7,"sites":[],"maxItemsPerPage":20}}'
+webPartData=$(echo "${webPartData//\{sitecollectionid\}/$siteId}")
+webPartData=$(echo "${webPartData//\{siteid\}/$webId}")
+webPartData=$(echo "${webPartData//\{site\}/$portalUrl}")
+webPartData=$(echo "${webPartData//\{hosturl\}/}")
+webPartData=$(echo "${webPartData//\{listid:Events\}/$eventsListId}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --standardWebPart Events \
+  --section 2 --column 2 --order 1 \
   --webPartData '`'"$webPartData"'`'
 success 'DONE'
 
