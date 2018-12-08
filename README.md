@@ -14,7 +14,7 @@ Setup bash script for the [PnP Starter Kit](https://github.com/SharePoint/sp-sta
 
 ## Setup
 
-Execute the setup script by in the command line running: `./setup.sh --tenantUrl https://contoso.sharepoint.com`.
+Execute the setup script by in the command line running: `./setup.sh --tenantUrl https://contoso.sharepoint.com --prefix pnp_`.
 
 Following are the options you can pass to the script:
 
