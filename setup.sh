@@ -128,6 +128,5 @@ echo
 # if [ ! $skipSolutionDeployment = true ]; then
 #   . ./_deploy-solution-package.sh
 # fi
-# . ./_setup-department-sites.sh
 
 success "SP Starter Kit has been successfully provisioned to $portalUrl"
