@@ -437,6 +437,15 @@ o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
   --section 1 --column 1 --order 1 \
   --webPartData '`'"$webPartData"'`'
 success 'DONE'
+sub '        - Tiles...'
+webPartData='{ "dataVersion": "1.0", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{},"imageSources":{},"links":{}}, "properties": {"title":"","listUrl":"{hosturl}{site}/Lists/PnPTiles","collectionData":[{"title":"Employee Directory","description":"Enterprise Phone book","url":"{site}/SitePages/People-Directory.aspx","icon":"Group","target":""},{"title":"HR","description":"Human Resources","url":"{site}/SitePages/HR.aspx","icon":"managerselfservice","target":""},{"title":"My Profile","description":"My Profile","url":"{site}/SitePages/My-Profile.aspx","icon":"d365talenthrcore","target":""},{"title":"Travel Instructions","description":"Traveling?","url":"{site}/SitePages/Travel-Instructions.aspx","icon":"airplane","target":""},{"title":"Financial Results","description":"Company Results","url":"{site}/SitePages/Financial-Results.aspx","icon":"stackedlinechart","target":""},{"title":"FAQ","description":"Frequently Asked Questions","url":"{site}/SitePages/FAQ.aspx","icon":"searchissue","target":""},{"title":"Training","description":"Training materials","url":"{site}/SitePages/Training.aspx","icon":"d365talentlearn","target":""},{"title":"Support","description":"Support","url":"{site}/SitePages/Support.aspx","icon":"headset","target":""},{"title":"Feedback","description":"Provide feedback on portal","url":"{site}/SitePages/Feedback.aspx","icon":"ChatInviteFriend","target":""}]}}'
+webPartData=$(echo "${webPartData//\{site\}/$portalUrl}")
+webPartData=$(echo "${webPartData//\{hosturl\}/}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 26cb4af3-7f48-4737-b82a-4e24167c2d07 \
+  --section 1 --column 2 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
 
 sub '- Configuring navigation...\n'
 # remove old navigation nodes
