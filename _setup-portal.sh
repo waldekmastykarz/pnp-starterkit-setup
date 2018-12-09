@@ -510,6 +510,40 @@ o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
   --section 3 --column 2 --order 2 \
   --webPartData '`'"$webPartData"'`'
 success 'DONE'
+sub '        - Image #1...'
+webPartData='{ "dataVersion": "1.8", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{"captionText":""},"imageSources":{"imageSource":"{site}/SiteAssets/working-methods.jpg"},"links":{}}, "properties": {"imageSourceType":2,"altText":"a person sitting at a table in a room","overlayText":"Working methods","fileName":"87461-GettyImages-867431800.jpg","siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{listid:Site Assets}","uniqueId":"dd4d43e7-2ac8-4d43-a1bd-dcb05672a1be","imgWidth":1500,"imgHeight":1000,"fixAspectRatio":false,"isOverlayTextEnabled":true}}'
+webPartData=$(echo "${webPartData//\{sitecollectionid\}/$siteId}")
+webPartData=$(echo "${webPartData//\{siteid\}/$webId}")
+webPartData=$(echo "${webPartData//\{listid:Site Assets\}/$siteAssetsListId}")
+webPartData=$(echo "${webPartData//\{site\}/$portalUrl}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --standardWebPart Image \
+  --section 4 --column 1 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+sub '        - Image #2...'
+webPartData='{ "dataVersion": "1.8", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{"captionText":""},"imageSources":{"imageSource":"{site}/SiteAssets/meeting-rooms.jpg"},"links":{}}, "properties": {"imageSourceType":2,"altText":"a flat screen tv sitting in a room","overlayText":"Meeting Rooms","fileName":"4335-WCO18_slidingDoor_001.jpg","siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{listid:Site Assets}","uniqueId":"2d8b9627-e91d-412d-aacc-3ec19f59bc1d","imgWidth":1500,"imgHeight":1000,"fixAspectRatio":false,"isOverlayTextEnabled":true}}'
+webPartData=$(echo "${webPartData//\{sitecollectionid\}/$siteId}")
+webPartData=$(echo "${webPartData//\{siteid\}/$webId}")
+webPartData=$(echo "${webPartData//\{listid:Site Assets\}/$siteAssetsListId}")
+webPartData=$(echo "${webPartData//\{site\}/$portalUrl}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --standardWebPart Image \
+  --section 4 --column 2 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+sub '        - Image #3...'
+webPartData='{ "dataVersion": "1.8", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{"captionText":""},"imageSources":{"imageSource":"{site}/SiteAssets/work-life-balance.png"},"links":{}}, "properties": {"imageSourceType":2,"altText":"a group of people on a beach","overlayText":"Work life balance","fileName":"48146-OFF12_Justice_01.png","siteId":"{sitecollectionid}","webId":"{siteid}","listId":"{listid:Site Assets}","uniqueId":"67664b85-067d-4be9-a7d7-89b2e804d09f","imgWidth":650,"imgHeight":433,"fixAspectRatio":false,"isOverlayTextEnabled":true}}'
+webPartData=$(echo "${webPartData//\{sitecollectionid\}/$siteId}")
+webPartData=$(echo "${webPartData//\{siteid\}/$webId}")
+webPartData=$(echo "${webPartData//\{listid:Site Assets\}/$siteAssetsListId}")
+webPartData=$(echo "${webPartData//\{site\}/$portalUrl}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --standardWebPart Image \
+  --section 4 --column 3 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+
 
 sub '- Configuring navigation...\n'
 # remove old navigation nodes
