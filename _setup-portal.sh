@@ -20,6 +20,10 @@ sub '- Retrieving Site Pages list ID...'
 sitePagesListId=$(o365 spo list get --webUrl $portalUrl --title 'Site Pages' --output json | jq -r '.Id')
 success 'DONE'
 
+sub '- Retrieving Documents list ID...'
+documentsListId=$(o365 spo list get --webUrl $portalUrl --title 'Documents' --output json | jq -r '.Id')
+success 'DONE'
+
 sub '- Applying theme...'
 o365 spo theme apply --name "$company HR" --webUrl $portalUrl >/dev/null
 success 'DONE'
@@ -334,6 +338,9 @@ success 'DONE'
 sub '- Retrieving ID for file WCO18_hallwayWalk_004.jpg...'
 WCO18_hallwayWalk_004JpgId=$(o365 spo file get --webUrl $portalUrl --url /sites/$(echo $prefix)portal/SiteAssets/WCO18_hallwayWalk_004.jpg --output json | jq -r '.UniqueId')
 success 'DONE'
+sub '- Retrieving ID for file contoso_report.pptx...'
+contoso_reportPptxId=$(o365 spo file get --webUrl $portalUrl --url "/sites/$(echo $prefix)portal/Shared Documents/contoso_report.pptx" --output json | jq -r '.UniqueId')
+success 'DONE'
 
 sub '- Provisioning pages...\n'
 sub '  - Creating pages...\n'
@@ -472,6 +479,19 @@ webPartData=$(echo "${webPartData//\{listid:Events\}/$eventsListId}")
 o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
   --standardWebPart Events \
   --section 2 --column 2 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+sub '        - DocumentEmbed...'
+webPartData='{ "dataVersion": "1.2", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{"annotation":"Latest quarterly company presentation","title":"PowerPoint Presentation"},"imageSources":{},"links":{"serverRelativeUrl":"{site}/Shared Documents/Contoso_Report.pptx","wopiurl":"{hosturl}{site}/_layouts/15/WopiFrame.aspx?sourcedoc={{fileuniqueid:/shared documents/contoso_report.pptx}}&amp;action=interactivepreview"}}, "properties": {"authorName":"Vesa Juvonen","chartitem":"","endrange":"","excelSettingsType":"","file":"{hosturl}{site}/Shared Documents/Contoso_Report.pptx","listId":"{listid:Documents}","modifiedAt":"2018-05-14T13:40:02+02:00","photoUrl":"/_layouts/15/userphoto.aspx?size=S&amp;accountname=vesaj%40officedevpnp.onmicrosoft.com","rangeitem":"","siteId":"{sitecollectionid}","startPage":1,"startrange":"","tableitem":"","uniqueId":"{fileuniqueid:/shared documents/contoso_report.pptx}","wdallowinteractivity":true,"wdhidegridlines":true,"wdhideheaders":true,"webId":"{siteid}"}}'
+webPartData=$(echo "${webPartData//\{sitecollectionid\}/$siteId}")
+webPartData=$(echo "${webPartData//\{siteid\}/$webId}")
+webPartData=$(echo "${webPartData//\{site\}/$portalUrl}")
+webPartData=$(echo "${webPartData//\{hosturl\}/}")
+webPartData=$(echo "${webPartData//\{fileuniqueid:\/shared documents\/contoso_report.pptx\}/$contoso_reportPptxId}")
+webPartData=$(echo "${webPartData//\{listid:Documents\}/$documentsListId}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --standardWebPart DocumentEmbed \
+  --section 3 --column 1 --order 2 \
   --webPartData '`'"$webPartData"'`'
 success 'DONE'
 
