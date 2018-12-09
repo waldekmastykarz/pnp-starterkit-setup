@@ -565,6 +565,63 @@ o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
   --webPartData '`'"$webPartData"'`'
 success 'DONE'
 
+sub '    - personal.aspx...\n'
+pageName=personal.aspx
+sub '      - Sections...\n'
+sections=(
+  'Template:"ThreeColumn" Order:"1"'
+  'Template:"OneColumn" Order:"2"'
+)
+for section in "${sections[@]}"; do
+  template=$(getPropertyValue "$section" "Template")
+  order=$(getPropertyValue "$section" "Order")
+  sub "        - $order..."
+  o365 spo page section add --webUrl $portalUrl --name $pageName \
+    --sectionTemplate $template --order $order
+  success 'DONE'
+done
+sub '      - Web parts...\n'
+sub '        - Personal calendar...'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId bbcd646e-6b86-4480-a68a-850c98f94519 \
+  --section 1 --column 1 --order 1
+success 'DONE'
+sub '        - Personal contacts...'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId a95742b9-5e67-4a11-8e51-7a76812a9d60 \
+  --section 1 --column 1 --order 2
+success 'DONE'
+sub '        - Personal tasks...'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId ee972022-9937-4b69-9c25-eaf77003f4f9 \
+  --section 1 --column 2 --order 1
+success 'DONE'
+sub '        - Personal email...'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId ac41debd-d92c-4de0-9d67-e7bc191030ee \
+  --section 1 --column 2 --order 2
+success 'DONE'
+sub '        - Followed sites...'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 92d5cc6c-fae5-4e91-9583-ab33950f5a8d \
+  --section 1 --column 3 --order 1
+success 'DONE'
+sub '        - Recently used documents...'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 596e3e97-f3ca-4cf9-9b8e-cb852f063356 \
+  --section 1 --column 3 --order 2
+success 'DONE'
+sub '        - Recently visited sites...'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 277282d0-debb-42d6-b4b3-30ec543964fd \
+  --section 1 --column 3 --order 3
+success 'DONE'
+sub '        - People directory...'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId d9d6f014-3fd9-4fb9-af54-044c7c43e081 \
+  --section 2 --column 1 --order 1
+success 'DONE'
+
 sub '- Configuring navigation...\n'
 # remove old navigation nodes
 navigationNodes=($(o365 spo navigation node list --webUrl $portalUrl --location TopNavigationBar --output json | jq '.[] | .Id'))
