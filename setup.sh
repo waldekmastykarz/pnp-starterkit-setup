@@ -115,18 +115,26 @@ echo
 msg 'Provisioning the SP Starter Kit...\n'
 echo
 
-# . ./_setup-tenant.sh
-# . ./_setup-taxonomy.sh
+. ./_setup-tenant.sh
+. ./_setup-taxonomy.sh
 . ./_setup-portal.sh
-# . ./_setup-hr.sh
-# . ./_setup-marketing.sh
+. ./_setup-hr.sh
+. ./_setup-marketing.sh
 
-# if [ ! $skipSiteCreation = true ]; then
-#   . ./_create-hierarchy.sh
-# fi
-# . ./_provision-solution-prerequisites.sh
-# if [ ! $skipSolutionDeployment = true ]; then
-#   . ./_deploy-solution-package.sh
-# fi
+if [ ! $skipSiteCreation = true ]; then
+  . ./_create-hierarchy.sh
+fi
+if [ ! -z "$stockAPIKey" ]; then
+  sub "- Setting stockAPIKey $stockAPIKey..."
+  o365 spo storageentity set --appCatalogUrl $appCatalogUrl \
+    --key "PnP-Portal-AlphaVantage-API-Key" --value "$stockAPIKey" \
+    --description "API Key for Alpha Advantage REST Stock service"
+  success 'DONE'
+else
+  warning 'SKIPPED'
+fi
+if [ ! $skipSolutionDeployment = true ]; then
+  . ./_deploy-solution-package.sh
+fi
 
 success "SP Starter Kit has been successfully provisioned to $portalUrl"
