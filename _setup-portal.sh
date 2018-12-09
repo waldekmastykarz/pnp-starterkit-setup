@@ -543,7 +543,27 @@ o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
   --section 4 --column 3 --order 1 \
   --webPartData '`'"$webPartData"'`'
 success 'DONE'
-
+sub '        - World clock Singapore...'
+webPartData='{ "dataVersion": "1.0", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{},"imageSources":{},"links":{}}, "properties": {"description":"Singapore","timeZoneOffset":103}}'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 4f87b698-f910-451f-b4ea-7848a472af0f \
+  --section 5 --column 1 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+sub '        - World clock London...'
+webPartData='{ "dataVersion": "1.0", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{},"imageSources":{},"links":{}}, "properties": {"description":"London","timeZoneOffset":48}}'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 4f87b698-f910-451f-b4ea-7848a472af0f \
+  --section 5 --column 2 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+sub '        - World clock Seattle...'
+webPartData='{ "dataVersion": "1.0", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{},"imageSources":{},"links":{}}, "properties": {"description":"Seattle","timeZoneOffset":10}}'
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 4f87b698-f910-451f-b4ea-7848a472af0f \
+  --section 5 --column 3 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
 
 sub '- Configuring navigation...\n'
 # remove old navigation nodes
