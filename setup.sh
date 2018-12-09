@@ -46,7 +46,7 @@ skipSolutionDeployment=false
 skipSiteCreation=false
 stockAPIKey=""
 company="Contoso"
-weatherCity="Seattle"
+weatherCity="Seattle, WA"
 stockSymbol="MSFT"
 
 # script arguments

@@ -494,6 +494,22 @@ o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
   --section 3 --column 1 --order 2 \
   --webPartData '`'"$webPartData"'`'
 success 'DONE'
+sub '        - Weather...'
+webPartData='{ "dataVersion": "1.0", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{},"imageSources":{},"links":{}}, "properties": {"temperatureUnit":"F","location":{"latitude":28.538,"longitude":-81.377,"name":"{parameter:weatherCity}"}}}'
+webPartData=$(echo "${webPartData//\{parameter:weatherCity\}/$weatherCity}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 868ac3c3-cad7-4bd6-9a1c-14dc5cc8e823 \
+  --section 3 --column 2 --order 1 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
+sub '        - Stocks...'
+webPartData='{ "dataVersion": "1.0", "serverProcessedContent": {"htmlStrings":{},"searchablePlainTexts":{},"imageSources":{},"links":{}}, "properties": {"stockSymbol":"{parameter:StockSymbol}","autoRefresh":false,"demo":true}}'
+webPartData=$(echo "${webPartData//\{parameter:StockSymbol\}/$stockSymbol}")
+o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
+  --webPartId 50256fc2-a28f-4544-900e-32724d32bc7f \
+  --section 3 --column 2 --order 2 \
+  --webPartData '`'"$webPartData"'`'
+success 'DONE'
 
 sub '- Configuring navigation...\n'
 # remove old navigation nodes
