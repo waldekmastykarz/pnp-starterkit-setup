@@ -5,7 +5,7 @@ Setup bash script for the [PnP Starter Kit](https://github.com/SharePoint/sp-sta
 ## Prerequisites
 
 - Install
-  - [Office 365 CLI](https://aka.ms/o365cli) latest beta (`npm i @pnp/office365-cli@next`)
+  - [Office 365 CLI](https://aka.ms/o365cli) latest beta (`npm i -g @pnp/office365-cli@next`)
   - [jq](https://stedolan.github.io/jq/)
 - Configure
   - Set the user who will run the setup script as a taxonomy term store admin
