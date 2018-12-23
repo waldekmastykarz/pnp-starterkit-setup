@@ -8,7 +8,7 @@ Setup bash script for the [PnP Starter Kit](https://github.com/SharePoint/sp-sta
   - [Office 365 CLI](https://aka.ms/o365cli) latest beta (`npm i @pnp/office365-cli@next`)
   - [jq](https://stedolan.github.io/jq/)
 - Configure
-  - Set the use who will run the setup script as a taxonomy term store admin
+  - Set the user who will run the setup script as a taxonomy term store admin
 - Execute
   - `o365 spo connect [tenant admin]`, eg. `o365 spo connect https://contoso-admin.sharepoint.com`
   - `o365 graph connect`
