@@ -15,12 +15,21 @@ help() {
   echo "--stockSymbol [stockSymbol]      Stock symbol to use to display the current stock value in the stock web part. Default 'MSFT'"
   echo "--skipSolutionDeployment         Set, to skip deploying the solution package"
   echo "--skipSiteCreation               Set, to skip creating sites"
+  echo "--checkPoint [checkPoint]        Resume script from the given check point"
   echo
   echo "Example:"
   echo
   echo "  Provision the SP Starter Kit to the specified tenant, prefixing all created sites using '_pnp'"
   echo "    ./setup.sh --tenantUrl https://contoso.sharepoint.com --prefix pnp"
   echo
+}
+
+checkPoint() {
+  if (( $checkPoint > 0)); then
+    echo
+    warning "You can resume the script from the last good state by adding --checkPoint $checkPoint"
+    echo
+  fi
 }
 
 isError() {

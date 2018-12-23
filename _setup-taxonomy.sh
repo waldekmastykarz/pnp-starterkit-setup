@@ -128,3 +128,5 @@ done
 success 'DONE'
 echo
 ### /PnP-Organizations terms
+
+checkPoint=200

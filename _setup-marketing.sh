@@ -31,3 +31,5 @@ success 'DONE'
 
 success 'DONE'
 echo
+
+checkPoint=500

@@ -217,7 +217,7 @@ else
   warning 'EXISTS'
 fi
 # /Site Assets
-PnP-PortalFooter-Links
+# PnP-PortalFooter-Links
 sub '  - PnP-PortalFooter-Links...'
 list=$(o365 spo list get --webUrl $portalUrl --title PnP-PortalFooter-Links --output json || true)
 if $(isError "$list"); then
@@ -378,7 +378,8 @@ for pageInfo in "${pages[@]}"; do
     success 'DONE'
     sub "    - Creating $pageName..."
   fi
-  o365 spo page add --webUrl $portalUrl --name $pageName --title "$pageTitle" $promote --publish
+  o365 spo page add --webUrl $portalUrl --name $pageName --title "$pageTitle" \
+    --layoutType $layout $promote --publish
   success 'DONE'
 done
 
@@ -622,6 +623,50 @@ o365 spo page clientsidewebpart add --webUrl $portalUrl --pageName $pageName \
   --section 2 --column 1 --order 1
 success 'DONE'
 
+sub '    - Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx...\n'
+pageName=Meeting-on-Marketing-In-Non-English-Speaking-Markets-This-Friday.aspx
+sub '      - Section...'
+o365 spo page section add --webUrl $portalUrl --name $pageName \
+    --sectionTemplate OneColumn --order 1
+success 'DONE'
+sub '      - Text...'
+o365 spo page text add --webUrl $portalUrl --pageName $pageName \
+  --text 'Please attend this department-wide meeting next Thursday at 4:00PM in conference room seven. We will be discussing tactics on how to effectively create marketing campaigns in our new international markets.'
+success 'DONE'
+
+sub '    - Marketing-Lunch...\n'
+pageName=Marketing-Lunch.aspx
+sub '      - Section...'
+o365 spo page section add --webUrl $portalUrl --name $pageName \
+    --sectionTemplate OneColumn --order 1
+success 'DONE'
+sub '      - Text...'
+o365 spo page text add --webUrl $portalUrl --pageName $pageName \
+  --text 'There is a lunch for the Marketing team Next Tuesday at 12:30PM. All Marketing team members should attend, as we will be talking about some of the new projects that we hope to put through for the holiday season.'
+success 'DONE'
+
+sub '    - New-International-Marketing-Initiatives...\n'
+pageName=New-International-Marketing-Initiatives.aspx
+sub '      - Section...'
+o365 spo page section add --webUrl $portalUrl --name $pageName \
+    --sectionTemplate OneColumn --order 1
+success 'DONE'
+sub '      - Text...'
+o365 spo page text add --webUrl $portalUrl --pageName $pageName \
+  --text 'We will be releasing a new international marketing campaign in the coming weeks. Look for more details here.​'
+success 'DONE'
+
+sub '    - New-Portal...\n'
+pageName=New-Portal.aspx
+sub '      - Section...'
+o365 spo page section add --webUrl $portalUrl --name $pageName \
+    --sectionTemplate OneColumn --order 1
+success 'DONE'
+sub '      - Text...'
+o365 spo page text add --webUrl $portalUrl --pageName $pageName \
+  --text 'We are happy to announce availability of this new Intranet portal. Please do give us feedback!'
+success 'DONE'
+
 sub '- Configuring navigation...\n'
 # remove old navigation nodes
 navigationNodes=($(o365 spo navigation node list --webUrl $portalUrl --location TopNavigationBar --output json | jq '.[] | .Id'))
@@ -664,3 +709,5 @@ setupPortalExtensions $portalUrl
 
 success 'DONE'
 echo
+
+checkPoint=300

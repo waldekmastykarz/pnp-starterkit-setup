@@ -124,3 +124,5 @@ success 'DONE'
 success 'DONE'
 echo
 ### /site designs
+
+checkPoint=100

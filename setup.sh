@@ -48,6 +48,7 @@ stockAPIKey=""
 company="Contoso"
 weatherCity="Seattle, WA"
 stockSymbol="MSFT"
+checkPoint=0
 
 # script arguments
 while [ $# -gt 0 ]; do
@@ -82,6 +83,10 @@ while [ $# -gt 0 ]; do
       shift
       stockSymbol=$1
       ;;
+    --checkPoint)
+      shift
+      checkPoint=$1
+      ;;
     -h|--help)
       help
       exit
@@ -100,6 +105,10 @@ if [ -z "$tenantUrl" ]; then
   exit 1
 fi
 
+# show check point information to allow the user to resume the script
+# from the last successful state
+trap "checkPoint" ERR
+
 msg 'Retrieving tenant app catalog URL...'
 portalUrl=$tenantUrl/sites/$(echo $prefix)portal
 hrUrl=$tenantUrl/sites/$(echo $prefix)hr
@@ -115,26 +124,33 @@ echo
 msg 'Provisioning the SP Starter Kit...\n'
 echo
 
-. ./_setup-tenant.sh
-. ./_setup-taxonomy.sh
-. ./_setup-portal.sh
-. ./_setup-hr.sh
-. ./_setup-marketing.sh
+if (( $checkPoint < 100 )); then
+  . ./_setup-tenant.sh
+fi
+if (( $checkPoint < 200 )); then
+  . ./_setup-taxonomy.sh
+fi
+if (( $checkPoint < 300 )); then
+  . ./_setup-portal.sh
+fi
+if (( $checkPoint < 400 )); then
+  . ./_setup-hr.sh
+fi
+if (( $checkPoint < 500 )); then
+  . ./_setup-marketing.sh
+fi
 
-if [ ! $skipSiteCreation = true ]; then
-  . ./_create-hierarchy.sh
-fi
-if [ ! -z "$stockAPIKey" ]; then
+if (( $checkPoint < 600 )); then
   sub "- Setting stockAPIKey $stockAPIKey..."
-  o365 spo storageentity set --appCatalogUrl $appCatalogUrl \
-    --key "PnP-Portal-AlphaVantage-API-Key" --value "$stockAPIKey" \
-    --description "API Key for Alpha Advantage REST Stock service"
-  success 'DONE'
-else
-  warning 'SKIPPED'
-fi
-if [ ! $skipSolutionDeployment = true ]; then
-  . ./_deploy-solution-package.sh
+  if [ ! -z "$stockAPIKey" ]; then
+    o365 spo storageentity set --appCatalogUrl $appCatalogUrl \
+      --key "PnP-Portal-AlphaVantage-API-Key" --value "$stockAPIKey" \
+      --description "API Key for Alpha Advantage REST Stock service"
+    success 'DONE'
+  else
+    warning 'SKIPPED'
+  fi
+  checkPoint=600
 fi
 
 success "SP Starter Kit has been successfully provisioned to $portalUrl"
