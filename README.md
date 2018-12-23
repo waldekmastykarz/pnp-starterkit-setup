@@ -30,6 +30,7 @@ argument|description|required|default value|example value
 `-c, --company`|Name of the organization to use when provisioning Starter Kit|no|`Contoso`|`Contoso`
 `-w, --weatherCity`|City for which to display weather in the weather web part|no|`Seattle`|`Seattle`
 `--stockSymbol`|Symbol of the stock to display in the stock web part|no|`MSFT`|`MSFT`
+`--checkPoint`|Check point from which to resume executing the setup script|no|`0`|`100`
 
 ## Remove
 
