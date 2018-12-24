@@ -130,9 +130,7 @@ fi
 if (( $checkPoint < 200 )); then
   . ./_setup-taxonomy.sh
 fi
-if (( $checkPoint < 300 )); then
-  . ./_setup-portal.sh
-fi
+. ./_setup-portal.sh
 if (( $checkPoint < 400 )); then
   . ./_setup-hr.sh
 fi
@@ -153,4 +151,5 @@ if (( $checkPoint < 600 )); then
   checkPoint=600
 fi
 
+echo
 success "SP Starter Kit has been successfully provisioned to $portalUrl"
