@@ -1,5 +1,11 @@
-if (( $checkPoint < 300 )); then
+if (( $checkPoint < 500 )); then
   msg "Provisioning portal site at $portalUrl..."
+fi
+
+if (( $checkPoint >= 210 )); then
+    msg "\n"
+fi
+if (( $checkPoint < 210 )); then
   site=$(o365 spo site get --url $portalUrl --output json || true)
   if $(isError "$site"); then
     o365 spo site add --type CommunicationSite --url $portalUrl --title "$company" --description 'PnP SP Starket Kit Hub' >/dev/null
@@ -8,6 +14,10 @@ if (( $checkPoint < 300 )); then
     warning 'EXISTS'
   fi
 
+  checkPoint=210
+fi
+
+if (( $checkPoint < 280 )); then
   # IDs required for provisioning web parts
   sub '- Retrieving site ID...'
   siteId=$(o365 spo site get --url $portalUrl --output json | jq -r '.Id')
@@ -26,6 +36,7 @@ if (( $checkPoint < 300 )); then
   success 'DONE'
 fi
 
+# hubsiteId is also required for provisioning marketing and HR sites
 if (( $checkPoint < 500 )); then
   sub '- Configuring hub site...'
   hubsiteId=$(o365 spo hubsite list --output json | jq -r '.[] | select(.SiteUrl == "'"$portalUrl"'") | .ID')
@@ -47,15 +58,23 @@ if (( $checkPoint < 500 )); then
   fi
 fi
 
-if (( $checkPoint < 300 )); then
+if (( $checkPoint < 215 )); then
   sub '- Applying theme...'
   o365 spo theme apply --name "$company HR" --webUrl $portalUrl >/dev/null
   success 'DONE'
 
+  checkPoint=215
+fi
+
+if (( $checkPoint < 220 )); then
   sub '- Configuring logo...'
   o365 spo web set --webUrl $portalUrl --siteLogoUrl $(echo $portalUrl)/SiteAssets/contoso_sitelogo.png
   success 'DONE'
 
+  checkPoint=220
+fi
+
+if (( $checkPoint < 230 )); then
   sub '- Provisioning site columns...\n'
   fields=(
     '`<Field Type="DateTime" DisplayName="Start date-time" Required="FALSE" EnforceUniqueValues="FALSE" Indexed="FALSE" Format="DateTime" Group="PnP Columns" FriendlyDisplayFormat="Disabled" ID="{5ee2dd25-d941-455a-9bdb-7f2c54aed11b}" SourceID="{4f118c69-66e0-497c-96ff-d7855ce0713d}" StaticName="PnPAlertStartDateTime" Name="PnPAlertStartDateTime"><Default>[today]</Default></Field>`'
@@ -83,6 +102,10 @@ if (( $checkPoint < 300 )); then
     fi
   done
 
+  checkPoint=230
+fi
+
+if (( $checkPoint < 240 )); then
   sub '- Provisioning content types...\n'
   contentTypes=(
     'ID:"0x01007926A45D687BA842B947286090B8F67D" Name:"PnP Alert"'
@@ -103,6 +126,10 @@ if (( $checkPoint < 300 )); then
     fi
   done
 
+  checkPoint=240
+fi
+
+if (( $checkPoint < 250 )); then
   sub '- Adding fields to content types...\n'
   # The Name argument is purely informative so that you can easily see which field it is
   contentTypesFields=(
@@ -130,172 +157,186 @@ if (( $checkPoint < 300 )); then
     success 'DONE'
   done
 
+  checkPoint=250
+fi
+
+if (( $checkPoint < 280 )); then
   sub '- Provisioning lists...\n'
-  # events
-  sub '  - Events...'
-  list=$(o365 spo list get --webUrl $portalUrl --title Events --output json || true)
-  if $(isError "$list"); then
-    list=$(o365 spo list add --webUrl $portalUrl --title Events --baseTemplate Events \
-      --templateFeatureId 00bfea71-ec85-4903-972d-ebe475780106 \
-      --contentTypesEnabled --output json || true)
+    # events
+    sub '  - Events...'
+    list=$(o365 spo list get --webUrl $portalUrl --title Events --output json || true)
     if $(isError "$list"); then
-      error 'ERROR'
-      errorMessage "$list"
-      exit 1
+      list=$(o365 spo list add --webUrl $portalUrl --title Events --baseTemplate Events \
+        --templateFeatureId 00bfea71-ec85-4903-972d-ebe475780106 \
+        --contentTypesEnabled --output json || true)
+      if $(isError "$list"); then
+        error 'ERROR'
+        errorMessage "$list"
+        exit 1
+      fi
+      eventsListId=$(echo $list | jq -r '.Id')
+      success 'DONE'
+    else
+      eventsListId=$(echo $list | jq -r '.Id')
+      warning 'EXISTS'
     fi
-    eventsListId=$(echo $list | jq -r '.Id')
-    success 'DONE'
-  else
-    eventsListId=$(echo $list | jq -r '.Id')
-    warning 'EXISTS'
-  fi
 
-  sub '    - List items...\n'
-  addOrUpdateListItem $portalUrl Events 'SharePoint Conference North America' \
-    --fAllDayEvent true \
-    --EventDate '2018-05-21 00:00:00' \
-    --EndDate '2018-05-23 23:59:00'
-  addOrUpdateListItem $portalUrl Events 'European Collaboration Summit' \
-    --fAllDayEvent true \
-    --EventDate '2018-05-28 00:00:00' \
-    --EndDate '2018-05-30 23:59:00'
-  addOrUpdateListItem $portalUrl Events 'Microsoft Ignite' \
-    --fAllDayEvent true \
-    --EventDate '2018-09-24 00:00:00' \
-    --EndDate '2018-09-28 23:59:00'
-  addOrUpdateListItem $portalUrl Events 'European SharePoint Conference' \
-    --fAllDayEvent true \
-    --EventDate '2018-11-26 00:00:00' \
-    --EndDate '2018-11-29 23:59:00'
-  addOrUpdateListItem $portalUrl Events 'SharePoint Conference' \
-    --fAllDayEvent true \
-    --EventDate '2019-05-21 00:00:00' \
-    --EndDate '2019-05-23 23:59:00'
-  addOrUpdateListItem $portalUrl Events 'European Collaboration Summit' \
-    --fAllDayEvent true \
-    --EventDate '2019-05-27 00:00:00' \
-    --EndDate '2019-05-29 23:59:00'
-  # /events
-  # alerts
-  sub '  - Alerts...'
-  list=$(o365 spo list get --webUrl $portalUrl --title Alerts --output json || true)
-  if $(isError "$list"); then
-    o365 spo list add --webUrl $portalUrl --title Alerts --baseTemplate GenericList \
-      --templateFeatureId 00bfea71-de22-43b2-a848-c05709900100 \
-      --contentTypesEnabled >/dev/null
-    success 'DONE'
-  else
-    warning 'EXISTS'
-  fi
-  sub '    - Adding PnP Alert content type...'
-  contentType=$(o365 spo list contenttype list --webUrl $portalUrl \
-    --listTitle Alerts --output json | \
-    jq -r '.[] | select(.StringId | startswith("0x01007926A45D687BA842B947286090B8F67D")) | .StringId')
-  if [ -z "$contentType" ]; then
-    o365 spo list contenttype add --webUrl $portalUrl --listTitle Alerts \
-      --contentTypeId 0x01007926A45D687BA842B947286090B8F67D >/dev/null
-    success 'DONE'
-  else
-    warning 'EXISTS'
-  fi
-  sub '    - Configuring All items view...'
-  o365 spo list view set --webUrl $portalUrl --listTitle Alerts \
-    --viewTitle 'All Items' \
-    --ListViewXml '`<Query><OrderBy><FieldRef Name="ID" /></OrderBy></Query><ViewFields><FieldRef Name="LinkTitle" /><FieldRef Name="PnPAlertType" /><FieldRef Name="PnPAlertMessage" /><FieldRef Name="PnPAlertStartDateTime" /><FieldRef Name="PnPAlertEndDateTime" /><FieldRef Name="PnPAlertMoreInformation" /></ViewFields><RowLimit Paged="TRUE">30</RowLimit><JSLink>clienttemplates.js</JSLink><XslLink Default="TRUE">main.xsl</XslLink><Toolbar Type="Standard"/>`'
-  success 'DONE'
-  # /alerts
-  # Site Assets
-  sub '  - Site Assets...'
-  list=$(o365 spo list get --webUrl $portalUrl --title 'Site Assets' --output json || true)
-  if $(isError "$list"); then
-    list=$(o365 spo list add --webUrl $portalUrl --title 'SiteAssets' \
-      --description 'Use this library to store files which are included on pages within this site, such as images on Wiki pages.' \
-      --baseTemplate DocumentLibrary \
-      --templateFeatureId 00bfea71-e717-4e80-aa17-d0c71b360101 \
-      --contentTypesEnabled --output json || true)
+  if (( $checkPoint < 260 )); then
+    sub '    - List items...\n'
+    addOrUpdateListItem $portalUrl Events 'SharePoint Conference North America' \
+      --fAllDayEvent true \
+      --EventDate '2018-05-21 00:00:00' \
+      --EndDate '2018-05-23 23:59:00'
+    addOrUpdateListItem $portalUrl Events 'European Collaboration Summit' \
+      --fAllDayEvent true \
+      --EventDate '2018-05-28 00:00:00' \
+      --EndDate '2018-05-30 23:59:00'
+    addOrUpdateListItem $portalUrl Events 'Microsoft Ignite' \
+      --fAllDayEvent true \
+      --EventDate '2018-09-24 00:00:00' \
+      --EndDate '2018-09-28 23:59:00'
+    addOrUpdateListItem $portalUrl Events 'European SharePoint Conference' \
+      --fAllDayEvent true \
+      --EventDate '2018-11-26 00:00:00' \
+      --EndDate '2018-11-29 23:59:00'
+    addOrUpdateListItem $portalUrl Events 'SharePoint Conference' \
+      --fAllDayEvent true \
+      --EventDate '2019-05-21 00:00:00' \
+      --EndDate '2019-05-23 23:59:00'
+    addOrUpdateListItem $portalUrl Events 'European Collaboration Summit' \
+      --fAllDayEvent true \
+      --EventDate '2019-05-27 00:00:00' \
+      --EndDate '2019-05-29 23:59:00'
+    # /events
+    # alerts
+    sub '  - Alerts...'
+    list=$(o365 spo list get --webUrl $portalUrl --title Alerts --output json || true)
     if $(isError "$list"); then
-      error 'ERROR'
-      errorMessage "$list"
-      exit 1
+      o365 spo list add --webUrl $portalUrl --title Alerts --baseTemplate GenericList \
+        --templateFeatureId 00bfea71-de22-43b2-a848-c05709900100 \
+        --contentTypesEnabled >/dev/null
+      success 'DONE'
+    else
+      warning 'EXISTS'
     fi
-    siteAssetsListId=$(echo $list | jq -r '.Id')
-    o365 spo list set --webUrl $portalUrl --id $siteAssetsListId --title 'Site Assets'
+    sub '    - Adding PnP Alert content type...'
+    contentType=$(o365 spo list contenttype list --webUrl $portalUrl \
+      --listTitle Alerts --output json | \
+      jq -r '.[] | select(.StringId | startswith("0x01007926A45D687BA842B947286090B8F67D")) | .StringId')
+    if [ -z "$contentType" ]; then
+      o365 spo list contenttype add --webUrl $portalUrl --listTitle Alerts \
+        --contentTypeId 0x01007926A45D687BA842B947286090B8F67D >/dev/null
+      success 'DONE'
+    else
+      warning 'EXISTS'
+    fi
+    sub '    - Configuring All items view...'
+    o365 spo list view set --webUrl $portalUrl --listTitle Alerts \
+      --viewTitle 'All Items' \
+      --ListViewXml '`<Query><OrderBy><FieldRef Name="ID" /></OrderBy></Query><ViewFields><FieldRef Name="LinkTitle" /><FieldRef Name="PnPAlertType" /><FieldRef Name="PnPAlertMessage" /><FieldRef Name="PnPAlertStartDateTime" /><FieldRef Name="PnPAlertEndDateTime" /><FieldRef Name="PnPAlertMoreInformation" /></ViewFields><RowLimit Paged="TRUE">30</RowLimit><JSLink>clienttemplates.js</JSLink><XslLink Default="TRUE">main.xsl</XslLink><Toolbar Type="Standard"/>`'
     success 'DONE'
-  else
-    siteAssetsListId=$(echo $list | jq -r '.Id')
-    warning 'EXISTS'
+    # /alerts
   fi
-  # /Site Assets
-  # PnP-PortalFooter-Links
-  sub '  - PnP-PortalFooter-Links...'
-  list=$(o365 spo list get --webUrl $portalUrl --title PnP-PortalFooter-Links --output json || true)
-  if $(isError "$list"); then
-    list=$(o365 spo list add --webUrl $portalUrl --title PnPPortalFooterLinks --baseTemplate GenericList \
-      --templateFeatureId 00bfea71-de22-43b2-a848-c05709900100 \
-      --contentTypesEnabled --output json || true)
+  if (( $checkPoint < 280 )); then
+    # Site Assets
+    sub '  - Site Assets...'
+    list=$(o365 spo list get --webUrl $portalUrl --title 'Site Assets' --output json || true)
     if $(isError "$list"); then
-      error 'ERROR'
-      errorMessage "$list"
-      exit 1
+      list=$(o365 spo list add --webUrl $portalUrl --title 'SiteAssets' \
+        --description 'Use this library to store files which are included on pages within this site, such as images on Wiki pages.' \
+        --baseTemplate DocumentLibrary \
+        --templateFeatureId 00bfea71-e717-4e80-aa17-d0c71b360101 \
+        --contentTypesEnabled --output json || true)
+      if $(isError "$list"); then
+        error 'ERROR'
+        errorMessage "$list"
+        exit 1
+      fi
+      siteAssetsListId=$(echo $list | jq -r '.Id')
+      o365 spo list set --webUrl $portalUrl --id $siteAssetsListId --title 'Site Assets'
+      success 'DONE'
+    else
+      siteAssetsListId=$(echo $list | jq -r '.Id')
+      warning 'EXISTS'
     fi
-    listId=$(echo $list | jq -r '.Id')
-    o365 spo list set --webUrl $portalUrl --id $listId --title PnP-PortalFooter-Links
-    success 'DONE'
-  else
-    warning 'EXISTS'
+    # /Site Assets
   fi
-  sub '    - Adding PnPPortalLink content type...'
-  contentType=$(o365 spo list contenttype list --webUrl $portalUrl \
-    --listTitle PnP-PortalFooter-Links --output json | \
-    jq -r '.[] | select(.StringId | startswith("0x0100580DB2292968A34EA3748511017A6DD2")) | .StringId')
-  if [ -z "$contentType" ]; then
-    o365 spo list contenttype add --webUrl $portalUrl --listTitle PnP-PortalFooter-Links \
-      --contentTypeId 0x0100580DB2292968A34EA3748511017A6DD2 >/dev/null
+  if (( $checkPoint < 260 )); then
+    # PnP-PortalFooter-Links
+    sub '  - PnP-PortalFooter-Links...'
+    list=$(o365 spo list get --webUrl $portalUrl --title PnP-PortalFooter-Links --output json || true)
+    if $(isError "$list"); then
+      list=$(o365 spo list add --webUrl $portalUrl --title PnPPortalFooterLinks --baseTemplate GenericList \
+        --templateFeatureId 00bfea71-de22-43b2-a848-c05709900100 \
+        --contentTypesEnabled --output json || true)
+      if $(isError "$list"); then
+        error 'ERROR'
+        errorMessage "$list"
+        exit 1
+      fi
+      listId=$(echo $list | jq -r '.Id')
+      o365 spo list set --webUrl $portalUrl --id $listId --title PnP-PortalFooter-Links
+      success 'DONE'
+    else
+      warning 'EXISTS'
+    fi
+    sub '    - Adding PnPPortalLink content type...'
+    contentType=$(o365 spo list contenttype list --webUrl $portalUrl \
+      --listTitle PnP-PortalFooter-Links --output json | \
+      jq -r '.[] | select(.StringId | startswith("0x0100580DB2292968A34EA3748511017A6DD2")) | .StringId')
+    if [ -z "$contentType" ]; then
+      o365 spo list contenttype add --webUrl $portalUrl --listTitle PnP-PortalFooter-Links \
+        --contentTypeId 0x0100580DB2292968A34EA3748511017A6DD2 >/dev/null
+      success 'DONE'
+    else
+      warning 'EXISTS'
+    fi
+    sub '    - Configuring All items view...'
+    o365 spo list view set --webUrl $portalUrl --listTitle PnP-PortalFooter-Links \
+      --viewTitle 'All Items' \
+      --ListViewXml '`<Query><GroupBy Collapse="TRUE" GroupLimit="30"><FieldRef Name="PnPPortalLinkGroup" />  </GroupBy><OrderBy><FieldRef Name="ID" /></OrderBy></Query><ViewFields><FieldRef Name="LinkTitle" /><FieldRef Name="PnPPortalLinkGroup" /><FieldRef Name="PnPPortalLinkUrl" /></ViewFields><RowLimit Paged="TRUE">30</RowLimit><Aggregations Value="Off" /><JSLink>clienttemplates.js</JSLink>`'
     success 'DONE'
-  else
-    warning 'EXISTS'
-  fi
-  sub '    - Configuring All items view...'
-  o365 spo list view set --webUrl $portalUrl --listTitle PnP-PortalFooter-Links \
-    --viewTitle 'All Items' \
-    --ListViewXml '`<Query><GroupBy Collapse="TRUE" GroupLimit="30"><FieldRef Name="PnPPortalLinkGroup" />  </GroupBy><OrderBy><FieldRef Name="ID" /></OrderBy></Query><ViewFields><FieldRef Name="LinkTitle" /><FieldRef Name="PnPPortalLinkGroup" /><FieldRef Name="PnPPortalLinkUrl" /></ViewFields><RowLimit Paged="TRUE">30</RowLimit><Aggregations Value="Off" /><JSLink>clienttemplates.js</JSLink>`'
-  success 'DONE'
-  sub '    - List items...\n'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Find My Customers' \
-    --PnPPortalLinkGroup Applications \
-    --PnPPortalLinkUrl 'https://find.customers'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'CRM' \
-    --PnPPortalLinkGroup Applications \
-    --PnPPortalLinkUrl 'https://company.crm'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'ERP' \
-    --PnPPortalLinkGroup Applications \
-    --PnPPortalLinkUrl 'https://company.erp'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Technical Procedures' \
-    --PnPPortalLinkGroup Applications \
-    --PnPPortalLinkUrl 'https://tech.procs'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Expense Report Module' \
-    --PnPPortalLinkGroup 'Internal Modules' \
-    --PnPPortalLinkUrl 'https://expense.report'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Company Car Replacement' \
-    --PnPPortalLinkGroup 'Internal Modules' \
-    --PnPPortalLinkUrl 'https://need.new.car'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Vacation Request Module' \
-    --PnPPortalLinkGroup 'Internal Modules' \
-    --PnPPortalLinkUrl 'https://need.some.rest'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'CNN' \
-    --PnPPortalLinkGroup News \
-    --PnPPortalLinkUrl 'https://www.cnn.com/'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'BBC' \
-    --PnPPortalLinkGroup News \
-    --PnPPortalLinkUrl 'https://www.bbc.co.uk/'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'New York Times' \
-    --PnPPortalLinkGroup News \
-    --PnPPortalLinkUrl 'https://www.nytimes.com/'
-  addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Forbes' \
-    --PnPPortalLinkGroup News \
-    --PnPPortalLinkUrl 'http://www.forbes.com/'
-  # /PnP-PortalFooter-Links
+    sub '    - List items...\n'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Find My Customers' \
+      --PnPPortalLinkGroup Applications \
+      --PnPPortalLinkUrl 'https://find.customers'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'CRM' \
+      --PnPPortalLinkGroup Applications \
+      --PnPPortalLinkUrl 'https://company.crm'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'ERP' \
+      --PnPPortalLinkGroup Applications \
+      --PnPPortalLinkUrl 'https://company.erp'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Technical Procedures' \
+      --PnPPortalLinkGroup Applications \
+      --PnPPortalLinkUrl 'https://tech.procs'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Expense Report Module' \
+      --PnPPortalLinkGroup 'Internal Modules' \
+      --PnPPortalLinkUrl 'https://expense.report'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Company Car Replacement' \
+      --PnPPortalLinkGroup 'Internal Modules' \
+      --PnPPortalLinkUrl 'https://need.new.car'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Vacation Request Module' \
+      --PnPPortalLinkGroup 'Internal Modules' \
+      --PnPPortalLinkUrl 'https://need.some.rest'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'CNN' \
+      --PnPPortalLinkGroup News \
+      --PnPPortalLinkUrl 'https://www.cnn.com/'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'BBC' \
+      --PnPPortalLinkGroup News \
+      --PnPPortalLinkUrl 'https://www.bbc.co.uk/'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'New York Times' \
+      --PnPPortalLinkGroup News \
+      --PnPPortalLinkUrl 'https://www.nytimes.com/'
+    addOrUpdateListItem $portalUrl PnP-PortalFooter-Links 'Forbes' \
+      --PnPPortalLinkGroup News \
+      --PnPPortalLinkUrl 'http://www.forbes.com/'
+    # /PnP-PortalFooter-Links
 
+    checkPoint=260
+  fi
+fi
+
+if (( $checkPoint < 270 )); then
   # files
   sub '- Provisioning assets...\n'
   files=(
@@ -335,6 +376,10 @@ if (( $checkPoint < 300 )); then
   success 'DONE'
   # /files
 
+  checkPoint=270
+fi
+
+if (( $checkPoint < 280 )); then
   # IDs required for provisioning web parts
   sub '- Retrieving ID for file hero.jpg...'
   heroJpgId=$(o365 spo file get --webUrl $portalUrl --url /sites/$(echo $prefix)portal/SiteAssets/hero.jpg --output json | jq -r '.UniqueId')
@@ -677,6 +722,10 @@ if (( $checkPoint < 300 )); then
     --text 'We are happy to announce availability of this new Intranet portal. Please do give us feedback!'
   success 'DONE'
 
+  checkPoint=280
+fi
+
+if (( $checkPoint < 290 )); then
   sub '- Configuring navigation...\n'
   # remove old navigation nodes
   navigationNodes=($(o365 spo navigation node list --webUrl $portalUrl --location TopNavigationBar --output json | jq '.[] | .Id'))
@@ -715,10 +764,20 @@ if (( $checkPoint < 300 )); then
     success 'DONE'
   done
 
+  checkPoint=290
+fi
+
+if (( $checkPoint < 295 )); then
   setupPortalExtensions $portalUrl
 
+  checkPoint=295
+fi
+
+if (( $checkPoint < 500 )); then
   success 'DONE'
   echo
+fi
 
+if (( $checkPoint < 300 )); then
   checkPoint=300
 fi
