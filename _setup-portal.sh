@@ -292,6 +292,7 @@ sub '- Provisioning assets...\n'
 files=(
   'Commercial16_smallmeeting_02.jpg'
   'MSSurface_Pro4_SMB_Seattle_0578.jpg'
+  'WCO18_hallwayWalk_004.jpg'
   'WCO18_ITHelp_004.jpg'
   'WCO18_whiteboard_002.jpg'
   'Win17_15021_00_N9.jpg'
