@@ -7,7 +7,7 @@ fi
 if (( $checkPoint < 310 )); then
   site=$(o365 spo site get --url $siteUrl --output json || true)
   if $(isError "$site"); then
-    o365 spo site add --type TeamSite --url $siteUrl --title "Human Resources" --alias $alias >/dev/null
+    o365 spo site add --type TeamSite --url $siteUrl --title "Human Resources" --alias $alias --lcid 1033 >/dev/null
     success 'DONE'
   else
     warning 'EXISTS'

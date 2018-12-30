@@ -8,7 +8,7 @@ fi
 if (( $checkPoint < 210 )); then
   site=$(o365 spo site get --url $portalUrl --output json || true)
   if $(isError "$site"); then
-    o365 spo site add --type CommunicationSite --url $portalUrl --title "$company" --description 'PnP SP Starket Kit Hub' >/dev/null
+    o365 spo site add --type CommunicationSite --url $portalUrl --title "$company" --description 'PnP SP Starket Kit Hub' --lcid 1033 >/dev/null
     success 'DONE'
   else
     warning 'EXISTS'
