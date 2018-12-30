@@ -2,6 +2,8 @@
 
 Setup bash script for the [PnP Starter Kit](https://github.com/SharePoint/sp-starter-kit)
 
+![Terminal window with the output of the provisioning script on top of a web browser with the starter kit](./assets/starterkit_setup.png)
+
 ## Prerequisites
 
 - Install
