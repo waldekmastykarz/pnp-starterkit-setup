@@ -12,7 +12,7 @@ Setup bash script for the [PnP Starter Kit](https://github.com/SharePoint/sp-sta
 - Configure
   - Set the user who will run the setup script as a taxonomy term store admin
 - Execute
-  - `o365 spo login [tenant admin]`, eg. `o365 spo connect https://contoso-admin.sharepoint.com`
+  - `o365 spo login [tenant admin]`, eg. `o365 spo login https://contoso-admin.sharepoint.com`
   - `o365 graph login`
   - `chmod +x ./setup.sh`
 
