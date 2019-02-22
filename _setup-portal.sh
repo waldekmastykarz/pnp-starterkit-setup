@@ -266,7 +266,7 @@ if (( $checkPoint < 280 )); then
     sub '  - PnP-PortalFooter-Links...'
     list=$(o365 spo list get --webUrl $portalUrl --title PnP-PortalFooter-Links --output json || true)
     if $(isError "$list"); then
-      list=$(o365 spo list add --webUrl $portalUrl --title PnPPortalFooterLinks --baseTemplate GenericList \
+      list=$(o365 spo list add --webUrl $portalUrl --title PnP-PortalFooter-Links --baseTemplate GenericList \
         --templateFeatureId 00bfea71-de22-43b2-a848-c05709900100 \
         --contentTypesEnabled --output json || true)
       if $(isError "$list"); then
